@@ -518,15 +518,81 @@ const PLAN_RANK: Record<UserPlan, number> = {
   premium: 2,
 };
 
+const PLAN_COMPARISON = [
+  { feature: "Noticias, artigos e glossario", free: true, pro: true, premium: true },
+  { feature: "Resumo diario e semanal", free: false, pro: true, premium: true },
+  { feature: "Alertas, filtros e watchlist educativa", free: false, pro: true, premium: true },
+  { feature: "Simulador de carteira e quizzes", free: false, pro: true, premium: true },
+  { feature: "Comunidade, aulas e relatorios", free: false, pro: false, premium: true },
+  { feature: "Materiais PDF e biblioteca premium", free: false, pro: false, premium: true },
+  { feature: "IA avancada para estudo operacional", free: false, pro: false, premium: true },
+];
+
 const COURSE_MODULES = [
-  { title: "Organizacao financeira", detail: "Mapeie renda, gastos, reserva e objetivos antes de investir." },
-  { title: "Renda fixa", detail: "Entenda Selic, CDI, IPCA, liquidez, risco de credito e marcacao a mercado." },
-  { title: "Inflacao, Selic e CDI", detail: "Aprenda como juros e inflacao afetam dinheiro, bolsa, cambio e renda fixa." },
-  { title: "Acoes", detail: "Leia empresas sem cair em promessa: receita, margem, divida, lucro e governanca." },
-  { title: "FIIs e ETFs", detail: "Use fundos para diversificacao, renda e exposicao tematica com custos claros." },
-  { title: "Cambio e Forex", detail: "Veja liquidez, alavancagem, spread, risco de noticia e gestao de tamanho." },
-  { title: "Noticias economicas", detail: "Transforme manchetes em contexto: dado, expectativa, surpresa e impacto." },
-  { title: "Anti-golpe", detail: "Checklist para identificar promessa de lucro, pressa, opacidade e conflito de interesse." },
+  {
+    title: "Organizacao financeira",
+    detail: "Mapeie renda, gastos, reserva e objetivos antes de investir.",
+    lessons: ["Diagnostico financeiro", "Reserva de emergencia", "Metas de curto, medio e longo prazo"],
+    pdf: "Planilha de orcamento e reserva",
+    exercise: "Monte um raio-x financeiro com renda, gastos fixos, gastos variaveis e meta de reserva.",
+    quiz: "Qual e o primeiro objetivo antes de buscar rentabilidade?",
+  },
+  {
+    title: "Renda fixa",
+    detail: "Entenda Selic, CDI, IPCA, liquidez, risco de credito e marcacao a mercado.",
+    lessons: ["CDB, Tesouro e liquidez", "Prefixado, pos-fixado e IPCA+", "Risco de credito e FGC"],
+    pdf: "Mapa de produtos de renda fixa",
+    exercise: "Compare dois produtos ficticios e explique qual combina com reserva e qual combina com longo prazo.",
+    quiz: "Por que um titulo prefixado pode oscilar antes do vencimento?",
+  },
+  {
+    title: "Inflacao, Selic e CDI",
+    detail: "Aprenda como juros e inflacao afetam dinheiro, bolsa, cambio e renda fixa.",
+    lessons: ["Inflacao na vida real", "Selic e custo de oportunidade", "CDI como referencia"],
+    pdf: "Glossario macroeconomico essencial",
+    exercise: "Leia uma noticia sobre juros e escreva o impacto esperado em renda fixa, bolsa e dolar.",
+    quiz: "O que tende a acontecer com ativos de risco quando juros sobem rapido?",
+  },
+  {
+    title: "Acoes",
+    detail: "Leia empresas sem cair em promessa: receita, margem, divida, lucro e governanca.",
+    lessons: ["Modelo de negocio", "Indicadores simples", "Risco, setor e governanca"],
+    pdf: "Checklist de leitura de empresa",
+    exercise: "Escolha uma empresa e preencha receita, lucro, divida, margem e principal risco.",
+    quiz: "Por que preco baixo nao significa acao barata?",
+  },
+  {
+    title: "FIIs e ETFs",
+    detail: "Use fundos para diversificacao, renda e exposicao tematica com custos claros.",
+    lessons: ["FIIs de papel e tijolo", "Dividend yield com cuidado", "ETFs e diversificacao"],
+    pdf: "Comparativo FII x ETF",
+    exercise: "Monte uma carteira ficticia com ETF amplo e explique o motivo da diversificacao.",
+    quiz: "Qual risco aparece quando o investidor olha apenas para dividend yield?",
+  },
+  {
+    title: "Cambio e Forex",
+    detail: "Veja liquidez, alavancagem, spread, risco de noticia e gestao de tamanho.",
+    lessons: ["Como pares de moedas funcionam", "Spread, lote e alavancagem", "Noticias e volatilidade"],
+    pdf: "Checklist de risco em Forex",
+    exercise: "Crie um plano ficticio com tese, invalidacao e perda maxima antes de qualquer entrada.",
+    quiz: "Por que alavancagem alta pode destruir uma conta mesmo com poucos trades?",
+  },
+  {
+    title: "Noticias economicas",
+    detail: "Transforme manchetes em contexto: dado, expectativa, surpresa e impacto.",
+    lessons: ["Consenso e surpresa", "Agenda economica", "Como resumir impacto sem exagero"],
+    pdf: "Modelo de leitura de noticia",
+    exercise: "Pegue uma manchete e responda: qual dado mudou, quem e afetado, qual risco invalida?",
+    quiz: "Por que manchete forte nem sempre vira movimento de mercado?",
+  },
+  {
+    title: "Anti-golpe",
+    detail: "Checklist para identificar promessa de lucro, pressa, opacidade e conflito de interesse.",
+    lessons: ["Promessa de ganho garantido", "Afiliados e transparencia", "Como verificar fontes"],
+    pdf: "Checklist anti-golpe NexusFX",
+    exercise: "Analise uma oferta ficticia e marque os sinais de alerta.",
+    quiz: "Qual frase deve acender alerta imediato em investimentos?",
+  },
 ];
 
 const STUDY_TRACKS = [
@@ -954,6 +1020,47 @@ function CheckoutPage({
 
   const activeOffer = hasOfferAccess(user, offer.id);
 
+  if (!user) {
+    return (
+      <main className="max-w-5xl mx-auto px-4 lg:px-8 py-10">
+        <button onClick={onBack} className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+          <ArrowLeft size={16} />
+          Voltar
+        </button>
+        <div className="grid lg:grid-cols-[1fr_360px] gap-4">
+          <section className="bg-card border border-border p-6">
+            <p className="mono text-[10px] tracking-widest uppercase text-primary">{offer.eyebrow}</p>
+            <h1 className="playfair text-3xl font-bold mt-2">{offer.title}</h1>
+            <p className="text-muted-foreground text-sm leading-relaxed mt-3">{offer.description}</p>
+            <div className="grid sm:grid-cols-2 gap-3 mt-6">
+              {offer.features.map((item) => (
+                <div key={item} className="border border-border bg-background/40 p-4 text-xs leading-relaxed text-muted-foreground">
+                  <LockKeyhole size={13} className="text-primary mb-2" />
+                  {item}
+                </div>
+              ))}
+            </div>
+          </section>
+          <aside className="bg-card border border-border p-6 self-start">
+            <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
+              <span className="text-sm">{offer.title}</span>
+              <span className="mono text-xl text-primary">
+                {offer.price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+              </span>
+            </div>
+            <div className="border border-amber-400/25 bg-amber-400/5 p-4">
+              <p className="mono text-[10px] tracking-widest uppercase text-amber-400">Login necessario</p>
+              <p className="text-xs text-muted-foreground leading-relaxed mt-2">Entre ou crie sua conta antes de preencher pagamento. Depois disso voce volta para este produto automaticamente.</p>
+            </div>
+            <button onClick={onLoginRequired} className="mt-5 w-full bg-primary text-primary-foreground px-4 py-2 mono text-sm hover:bg-primary/90">
+              Entrar para continuar
+            </button>
+          </aside>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="max-w-5xl mx-auto px-4 lg:px-8 py-10">
       <button onClick={onBack} className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
@@ -1123,7 +1230,7 @@ function LegacyPremiumArea({ user, onSubscribe, onBack }: { user: UserAccount | 
         <div className="bg-card border border-border p-6 text-center">
           <LockKeyhole size={30} className="mx-auto text-primary mb-4" />
           <h1 className="playfair text-3xl font-bold">Area premium bloqueada</h1>
-          <p className="text-muted-foreground text-sm mt-3">Assine por R$ 15/mes para liberar os estudos completos de Forex, IA e todos os topicos premium.</p>
+          <p className="text-muted-foreground text-sm mt-3">Escolha Pro ou Premium para liberar estudos, resumos e ferramentas educativas.</p>
           <button onClick={onSubscribe} className="mt-6 bg-primary text-primary-foreground px-4 py-2 mono text-sm hover:bg-primary/90">Assinar agora</button>
         </div>
       </main>
@@ -1340,24 +1447,28 @@ function PlansPage({ user, onCheckout, onBack }: { user: UserAccount | null; onC
         </p>
       </section>
 
-      <section className="grid lg:grid-cols-3 gap-4 mb-10">
+      <section className="grid lg:grid-cols-3 gap-4 mb-6">
         <article className="bg-card border border-border p-6">
           <p className="mono text-[10px] tracking-widest uppercase text-muted-foreground">Free</p>
           <h2 className="playfair text-2xl font-bold mt-2">R$ 0</h2>
-          <p className="text-sm text-muted-foreground mt-3">Noticias, artigos e glossario para atrair publico e criar confianca.</p>
-          <div className="mt-5 space-y-3">
-            {FREE_FEATURES.map((feature) => (
+          <p className="text-sm text-muted-foreground mt-3">Para conhecer o NexusFX e estudar o basico.</p>
+          <div className="mt-5 space-y-2">
+            {FREE_FEATURES.slice(0, 3).map((feature) => (
               <p key={feature} className="text-xs text-muted-foreground flex gap-2">
                 <CheckCircle2 size={13} className="text-emerald-400 shrink-0" />
                 {feature}
               </p>
             ))}
           </div>
+          <p className="mono text-[10px] tracking-widest uppercase text-muted-foreground mt-6">Atual</p>
         </article>
 
         {(["pro", "premium"] as OfferId[]).map((offerId) => {
           const offer = OFFERS[offerId];
           const active = offerId === currentPlan || (offerId === "pro" && currentPlan === "premium");
+          const highlights = offer.id === "pro"
+            ? ["Resumos premium", "Alertas e filtros", "Simulador e quizzes"]
+            : ["Tudo do Pro", "IA avancada", "Aulas, PDFs e comunidade"];
           return (
             <article key={offer.id} className={`border p-6 ${offer.id === "premium" ? "border-primary/40 bg-primary/5" : "border-border bg-card"}`}>
               <p className="mono text-[10px] tracking-widest uppercase text-primary">{offer.eyebrow}</p>
@@ -1367,23 +1478,46 @@ function PlansPage({ user, onCheckout, onBack }: { user: UserAccount | null; onC
                 <span className="text-xs text-muted-foreground"> {offer.recurrence}</span>
               </p>
               <p className="text-sm text-muted-foreground mt-3">{offer.description}</p>
-              <div className="mt-5 space-y-3">
-                {offer.features.map((feature) => (
+              <button disabled={active} onClick={() => onCheckout(offer.id)} className="mt-5 w-full bg-primary text-primary-foreground px-4 py-2 mono text-sm hover:bg-primary/90 disabled:opacity-50">
+                {active ? "Plano ativo" : offer.cta}
+              </button>
+              <div className="mt-5 space-y-2">
+                {highlights.map((feature) => (
                   <p key={feature} className="text-xs text-muted-foreground flex gap-2">
                     <CheckCircle2 size={13} className="text-emerald-400 shrink-0" />
                     {feature}
                   </p>
                 ))}
               </div>
-              <button disabled={active} onClick={() => onCheckout(offer.id)} className="mt-6 w-full bg-primary text-primary-foreground px-4 py-2 mono text-sm hover:bg-primary/90 disabled:opacity-50">
-                {active ? "Plano ativo" : offer.cta}
-              </button>
             </article>
           );
         })}
       </section>
 
-      <section className="grid lg:grid-cols-2 gap-4">
+      <section className="bg-card border border-border mb-6 overflow-x-auto">
+        <div className="min-w-[760px]">
+          <div className="grid grid-cols-[1fr_120px_120px_120px] gap-3 px-5 py-4 border-b border-border">
+            <span className="mono text-[10px] tracking-widest uppercase text-muted-foreground">Comparacao rapida</span>
+            <span className="mono text-[10px] tracking-widest uppercase text-muted-foreground text-center">Free</span>
+            <span className="mono text-[10px] tracking-widest uppercase text-primary text-center">Pro</span>
+            <span className="mono text-[10px] tracking-widest uppercase text-primary text-center">Premium</span>
+          </div>
+          {PLAN_COMPARISON.map((row) => (
+            <div key={row.feature} className="grid grid-cols-[1fr_120px_120px_120px] gap-3 px-5 py-3 border-b border-border last:border-b-0">
+              <span className="text-sm text-muted-foreground">{row.feature}</span>
+              {(["free", "pro", "premium"] as const).map((plan) => (
+                <span key={plan} className={`text-center mono text-xs ${row[plan] ? "text-emerald-400" : "text-muted-foreground/40"}`}>
+                  {row[plan] ? "sim" : "-"}
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mb-4">
+        <p className="mono text-[10px] tracking-widest uppercase text-primary mb-3">Produtos de entrada e produto separado</p>
+        <div className="grid lg:grid-cols-2 gap-4">
         {(["newsletter", "course"] as OfferId[]).map((offerId) => {
           const offer = OFFERS[offerId];
           const active = hasOfferAccess(user, offerId);
@@ -1402,6 +1536,7 @@ function PlansPage({ user, onCheckout, onBack }: { user: UserAccount | null; onC
             </article>
           );
         })}
+        </div>
       </section>
     </main>
   );
@@ -1603,25 +1738,84 @@ function CoursePage({ user, onCheckout, onBack }: { user: UserAccount | null; on
         <h1 className="playfair text-4xl font-bold mt-2">Investimentos do Zero - Metodo NexusFX</h1>
         <p className="text-sm text-muted-foreground leading-relaxed mt-3 max-w-3xl">Curso separado para transformar visitantes em alunos: aulas, PDFs, exercicios e quizzes.</p>
       </section>
+      <section className="grid lg:grid-cols-[1fr_340px] gap-4 mb-4">
+        <div className="bg-card border border-border p-6">
+          <p className="mono text-[10px] tracking-widest uppercase text-primary">Aula aberta</p>
+          <h2 className="playfair text-2xl font-bold mt-2">Como começar sem cair em promessa</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed mt-3">
+            O primeiro passo nao e escolher ativo. E organizar reserva, entender risco e aprender a ler informacao. Nesta aula, o aluno monta um mapa de objetivos e separa dinheiro de curto prazo, estudo e risco.
+          </p>
+          <div className="grid sm:grid-cols-3 gap-3 mt-5">
+            {["Diagnostico financeiro", "Reserva antes de risco", "Checklist anti-promessa"].map((item) => (
+              <div key={item} className="border border-border bg-background/40 p-3 text-xs text-muted-foreground">{item}</div>
+            ))}
+          </div>
+        </div>
+        <aside className="bg-card border border-border p-6 self-start">
+          <p className="mono text-[10px] tracking-widest uppercase text-primary">Dentro do curso</p>
+          <div className="grid grid-cols-2 gap-3 mt-4">
+            {[
+              ["8", "modulos"],
+              ["24", "aulas"],
+              ["8", "PDFs"],
+              ["8", "exercicios"],
+            ].map(([value, label]) => (
+              <div key={label} className="border border-border bg-background/40 p-3">
+                <p className="mono text-2xl text-primary">{value}</p>
+                <p className="mono text-[10px] text-muted-foreground uppercase tracking-widest">{label}</p>
+              </div>
+            ))}
+          </div>
+        </aside>
+      </section>
       <section className="grid lg:grid-cols-[1fr_340px] gap-4">
-        <div className="grid md:grid-cols-2 gap-3">
-          {COURSE_MODULES.map((module, index) => (
-            <article key={module.title} className={`border p-5 ${access ? "border-border bg-card" : index < 2 ? "border-border bg-card" : "border-border bg-card opacity-60"}`}>
-              <p className="mono text-[10px] tracking-widest uppercase text-primary">Modulo {index + 1}</p>
-              <h2 className="playfair text-xl font-bold mt-2">{module.title}</h2>
-              <p className="text-xs text-muted-foreground leading-relaxed mt-3">{module.detail}</p>
-              {!access && index >= 2 && <p className="mono text-[10px] tracking-widest uppercase text-amber-400 mt-4">Bloqueado</p>}
-            </article>
-          ))}
+        <div className="space-y-3">
+          {COURSE_MODULES.map((module, index) => {
+            const unlocked = access || index < 2;
+            return (
+              <article key={module.title} className={`border p-5 ${unlocked ? "border-border bg-card" : "border-border bg-card opacity-70"}`}>
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                  <div>
+                    <p className="mono text-[10px] tracking-widest uppercase text-primary">Modulo {index + 1}</p>
+                    <h2 className="playfair text-xl font-bold mt-2">{module.title}</h2>
+                    <p className="text-xs text-muted-foreground leading-relaxed mt-3">{module.detail}</p>
+                  </div>
+                  {!unlocked && <span className="mono text-[10px] tracking-widest uppercase text-amber-400 border border-amber-400/30 px-2 py-1 self-start">Bloqueado</span>}
+                </div>
+                <div className="grid md:grid-cols-3 gap-3 mt-4">
+                  {module.lessons.map((lesson) => (
+                    <div key={lesson} className="border border-border bg-background/40 p-3">
+                      <p className="mono text-[9px] tracking-widest uppercase text-muted-foreground">Aula</p>
+                      <p className="text-xs text-muted-foreground mt-1">{lesson}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="grid md:grid-cols-3 gap-3 mt-3">
+                  <div className="border border-border bg-background/40 p-3">
+                    <p className="mono text-[9px] tracking-widest uppercase text-primary">PDF</p>
+                    <p className="text-xs text-muted-foreground mt-1">{unlocked ? module.pdf : "Material liberado apos compra"}</p>
+                  </div>
+                  <div className="border border-border bg-background/40 p-3">
+                    <p className="mono text-[9px] tracking-widest uppercase text-primary">Exercicio</p>
+                    <p className="text-xs text-muted-foreground mt-1">{unlocked ? module.exercise : "Exercicio bloqueado"}</p>
+                  </div>
+                  <div className="border border-border bg-background/40 p-3">
+                    <p className="mono text-[9px] tracking-widest uppercase text-primary">Quiz</p>
+                    <p className="text-xs text-muted-foreground mt-1">{unlocked ? module.quiz : "Quiz bloqueado"}</p>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
         </div>
         <aside className="self-start">
           {access ? (
             <div className="border border-emerald-400/25 bg-emerald-400/5 p-5">
               <p className="mono text-[10px] tracking-widest uppercase text-emerald-400">Curso liberado</p>
-              <p className="text-sm text-muted-foreground leading-relaxed mt-3">Aulas, PDFs e exercicios estao disponiveis nesta conta.</p>
+              <p className="text-sm text-muted-foreground leading-relaxed mt-3">Aulas, PDFs, exercicios e quizzes estao disponiveis nesta conta.</p>
             </div>
           ) : (
-            <LockedPanel title="Comprar o curso" detail="Acesso unico ao curso completo por R$ 97." offerId="course" onCheckout={onCheckout} />
+            <LockedPanel title="Comprar o curso completo" detail="Acesso unico por R$ 97. Inclui 8 modulos, 24 aulas, PDFs, exercicios e quizzes." offerId="course" onCheckout={onCheckout} />
           )}
         </aside>
       </section>
@@ -1681,7 +1875,16 @@ function AiLabPage({ user, articles, selectedPair, onCheckout, onBack }: { user:
               </div>
             </>
           ) : (
-            <LockedPanel title="Resumo IA bloqueado" detail="Assine o Pro para liberar a IA que resume noticias, organiza impacto e aponta termos para estudar." offerId="pro" onCheckout={onCheckout} />
+            <div className="mt-5 space-y-4">
+              <div className="border border-border bg-background/40 p-4">
+                <p className="mono text-[10px] tracking-widest uppercase text-primary">Preview gratuito</p>
+                <p className="text-sm mt-2">{important[0]?.title ?? "Resumo de noticias em preparacao"}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed mt-2">
+                  Exemplo IA: separar manchete, impacto provavel, termos para estudar e risco de interpretacao. O Pro libera esse resumo para todo o feed.
+                </p>
+              </div>
+              <LockedPanel title="Resumo IA completo bloqueado" detail="Assine o Pro para liberar a IA que resume todas as noticias, organiza impacto no mercado e aponta termos para estudar." offerId="pro" onCheckout={onCheckout} />
+            </div>
           )}
         </div>
 
