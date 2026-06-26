@@ -46,24 +46,45 @@ type UserAccount = {
   name: string;
   email: string;
   premium: boolean;
-  plan?: "monthly";
+  plan?: UserPlan;
   premiumSince?: string;
   premiumUntil?: string;
+  newsletterUntil?: string;
+  coursePurchased?: boolean;
+  coursePurchasedAt?: string;
   lastPayment?: {
     id: string;
     method: "card" | "pix";
     amount: number;
     paidAt: string;
+    offerId?: OfferId;
     cardLast4?: string;
   };
 };
 
+type UserPlan = "free" | "pro" | "premium";
+type OfferId = "pro" | "premium" | "newsletter" | "course";
+
 type CheckoutPayment = {
+  offerId: OfferId;
   method: "card" | "pix";
   payerName: string;
   document: string;
   cardLast4?: string;
 };
+
+type Offer = {
+  id: OfferId;
+  title: string;
+  eyebrow: string;
+  price: number;
+  recurrence: string;
+  description: string;
+  features: string[];
+  cta: string;
+};
+
+type AppView = "home" | "login" | "checkout" | "premium" | "plans" | "studies" | "newsletter" | "course" | "ai";
 
 const FOREX_PAIRS = [
   { pair: "EUR/USD", value: 1.0892, change: 0.0014, pct: 0.13 },
@@ -411,6 +432,144 @@ const PREMIUM_SOURCES = [
   { label: "Investor.gov Day Trading Risk", url: "https://www.investor.gov/introduction-investing/investing-basics/investment-products/stocks/day-trading-your-dollars-risk" },
 ];
 
+const FREE_FEATURES = [
+  "Noticias por categoria",
+  "Artigos educativos",
+  "Glossario de mercado",
+  "Painel Forex basico",
+];
+
+const OFFERS: Record<OfferId, Offer> = {
+  pro: {
+    id: "pro",
+    title: "NexusFX Pro",
+    eyebrow: "Plano mensal",
+    price: 19.9,
+    recurrence: "/mes",
+    description: "Para acompanhar mercado com resumos, estudos e ferramentas educativas sem vender sinais.",
+    features: [
+      "Resumo diario antes da abertura",
+      "Resumo semanal",
+      "Alertas de noticias importantes",
+      "Watchlist educativa",
+      "Estudos sobre ativos sem recomendacao direta",
+      "Simulador de carteira ficticia",
+      "Quiz e trilhas de estudo",
+    ],
+    cta: "Assinar Pro",
+  },
+  premium: {
+    id: "premium",
+    title: "NexusFX Premium",
+    eyebrow: "Plano mensal",
+    price: 39.9,
+    recurrence: "/mes",
+    description: "Para assinantes que querem comunidade, aulas, relatorios, PDFs e a IA avancada de estudo.",
+    features: [
+      "Tudo do Pro",
+      "Comunidade privada",
+      "Aulas e relatorios educativos",
+      "Materiais PDF",
+      "IA avancada para estudos e operacoes simuladas",
+      "Revisao de teses com protocolo de risco",
+      "Biblioteca de prompts premium",
+    ],
+    cta: "Assinar Premium",
+  },
+  newsletter: {
+    id: "newsletter",
+    title: "NexusFX Morning Brief",
+    eyebrow: "Newsletter premium",
+    price: 9.9,
+    recurrence: "/mes",
+    description: "Resumo diario para entender o que mexe com mercado sem perder tempo.",
+    features: [
+      "Principais noticias do dia",
+      "Impacto no mercado em linguagem simples",
+      "Termos explicados",
+      "Agenda economica",
+      "Resumo do que estudar hoje",
+    ],
+    cta: "Assinar newsletter",
+  },
+  course: {
+    id: "course",
+    title: "Investimentos do Zero",
+    eyebrow: "Curso separado",
+    price: 97,
+    recurrence: "pagamento unico",
+    description: "Metodo NexusFX para aprender organizacao financeira, renda fixa, acoes, FIIs, ETFs, cambio e leitura de noticias.",
+    features: [
+      "Organizacao financeira",
+      "Renda fixa, Selic, CDI e inflacao",
+      "Acoes, FIIs e ETFs",
+      "Cambio e Forex com riscos",
+      "Como ler noticias economicas",
+      "Como nao cair em golpe",
+      "PDFs, exercicios e quizzes",
+    ],
+    cta: "Comprar curso",
+  },
+};
+
+const PLAN_RANK: Record<UserPlan, number> = {
+  free: 0,
+  pro: 1,
+  premium: 2,
+};
+
+const COURSE_MODULES = [
+  { title: "Organizacao financeira", detail: "Mapeie renda, gastos, reserva e objetivos antes de investir." },
+  { title: "Renda fixa", detail: "Entenda Selic, CDI, IPCA, liquidez, risco de credito e marcacao a mercado." },
+  { title: "Inflacao, Selic e CDI", detail: "Aprenda como juros e inflacao afetam dinheiro, bolsa, cambio e renda fixa." },
+  { title: "Acoes", detail: "Leia empresas sem cair em promessa: receita, margem, divida, lucro e governanca." },
+  { title: "FIIs e ETFs", detail: "Use fundos para diversificacao, renda e exposicao tematica com custos claros." },
+  { title: "Cambio e Forex", detail: "Veja liquidez, alavancagem, spread, risco de noticia e gestao de tamanho." },
+  { title: "Noticias economicas", detail: "Transforme manchetes em contexto: dado, expectativa, surpresa e impacto." },
+  { title: "Anti-golpe", detail: "Checklist para identificar promessa de lucro, pressa, opacidade e conflito de interesse." },
+];
+
+const STUDY_TRACKS = [
+  {
+    level: "Iniciante",
+    title: "Fundamentos do mercado",
+    lessons: ["Glossario essencial", "Juros e inflacao", "Como ler uma noticia economica"],
+  },
+  {
+    level: "Intermediario",
+    title: "Leitura de ativos",
+    lessons: ["Acoes e FIIs", "ETFs e diversificacao", "Cambio sem promessa de ganho"],
+  },
+  {
+    level: "Avancado",
+    title: "Processo e risco",
+    lessons: ["Watchlist educativa", "Diario de estudos", "Simulador de carteira ficticia"],
+  },
+];
+
+const DAILY_BRIEF = [
+  "Antes da abertura: verifique agenda economica, dolar, juros futuros, commodities e noticias politicas.",
+  "Mercado local: Ibovespa tende a reagir a fluxo estrangeiro, fiscal, Petrobras, bancos e curva de juros.",
+  "Mercado global: tecnologia, Fed, inflacao americana e China seguem como motores de sentimento.",
+  "Estudo do dia: escolha uma noticia e responda: qual dado mudou, qual ativo pode reagir e qual risco invalida a leitura?",
+];
+
+const WEEKLY_BRIEF = [
+  "Revisar os eventos que realmente mudaram expectativa de juros.",
+  "Separar alta por fundamento de alta por fluxo curto.",
+  "Atualizar watchlist educativa com motivo de estudo, nao com ordem de compra.",
+  "Medir se a carteira ficticia esta concentrada demais em um unico tema.",
+];
+
+const GLOSSARY = [
+  { term: "Selic", text: "Taxa basica de juros do Brasil; referencia para credito, renda fixa e custo de oportunidade." },
+  { term: "CDI", text: "Referencia usada em muitos investimentos de renda fixa no Brasil." },
+  { term: "ETF", text: "Fundo negociado em bolsa que replica uma cesta, indice ou estrategia." },
+  { term: "Spread", text: "Diferenca entre preco de compra e venda. Em Forex, aumenta em momentos de risco." },
+  { term: "Drawdown", text: "Queda do capital a partir de um topo. Ajuda a medir risco real do processo." },
+  { term: "Alavancagem", text: "Operar valor maior que o capital disponivel. Amplia ganhos e perdas." },
+];
+
 const RSS_FEEDS = [
   { cat: "MUNDO", query: "noticias internacionais mundo hoje politica economia" },
   { cat: "MUNDO", query: "world news Europe Asia Africa Americas Middle East" },
@@ -447,6 +606,8 @@ const articleHash = (article: NewsArticle) => `#/noticia/${article.id}`;
 const categoryHash = (cat: string) => `#/categoria/${cat.toLowerCase()}`;
 const SUBSCRIPTION_DAYS = 30;
 const USER_STORAGE_KEY = "nexusfx-user";
+const PENDING_OFFER_KEY = "nexusfx-pending-offer";
+const DEFAULT_OFFER_ID: OfferId = "pro";
 
 const onlyDigits = (value: string) => value.replace(/\D/g, "");
 
@@ -475,10 +636,31 @@ const formatDate = (value?: string) => {
   return new Date(value).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
 };
 
-const isPremiumActive = (user: UserAccount | null) => {
-  if (!user?.premium) return false;
-  if (!user.premiumUntil) return true;
-  return new Date(user.premiumUntil).getTime() > Date.now();
+const isFutureDate = (value?: string) => !!value && new Date(value).getTime() > Date.now();
+
+const isOfferId = (value: string): value is OfferId => value in OFFERS;
+
+const getUserPlan = (user: UserAccount | null): UserPlan => {
+  if (!user) return "free";
+  if (user.plan === "pro" || user.plan === "premium") {
+    return isFutureDate(user.premiumUntil) ? user.plan : "free";
+  }
+  if (user.premium && isFutureDate(user.premiumUntil)) return "premium";
+  return "free";
+};
+
+const hasPlanAccess = (user: UserAccount | null, minimum: Exclude<UserPlan, "free">) =>
+  PLAN_RANK[getUserPlan(user)] >= PLAN_RANK[minimum];
+
+const hasNewsletterAccess = (user: UserAccount | null) => hasPlanAccess(user, "pro") || isFutureDate(user?.newsletterUntil);
+
+const hasCourseAccess = (user: UserAccount | null) => hasPlanAccess(user, "premium") || !!user?.coursePurchased;
+
+const hasOfferAccess = (user: UserAccount | null, offerId: OfferId) => {
+  if (offerId === "pro") return hasPlanAccess(user, "pro");
+  if (offerId === "premium") return hasPlanAccess(user, "premium");
+  if (offerId === "newsletter") return hasNewsletterAccess(user);
+  return hasCourseAccess(user);
 };
 
 const relativeTime = (date: Date) => {
@@ -629,12 +811,12 @@ function PremiumBox({ title, items, premium, onSubscribe, onAccess }: { title: s
     <div className="border border-primary/30 bg-primary/5 p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="mono text-[10px] tracking-widest uppercase text-primary">Plano premium</p>
+          <p className="mono text-[10px] tracking-widest uppercase text-primary">Planos pagos</p>
           <h3 className="playfair text-xl font-bold mt-1">{title}</h3>
         </div>
         <div className="text-right shrink-0">
-          <p className="mono text-2xl font-bold text-primary">R$ 15</p>
-          <p className="mono text-[10px] text-muted-foreground">por mes</p>
+          <p className="mono text-2xl font-bold text-primary">R$ 19,90</p>
+          <p className="mono text-[10px] text-muted-foreground">Pro / mes</p>
         </div>
       </div>
       <div className="mt-4 grid sm:grid-cols-2 gap-2">
@@ -653,7 +835,7 @@ function PremiumBox({ title, items, premium, onSubscribe, onAccess }: { title: s
           </span>
         ) : (
           <span className="inline-flex items-center gap-2">
-            Assinar por R$ 15/mes
+            Ver planos
             <ArrowUpRight size={14} />
           </span>
         )}
@@ -702,12 +884,14 @@ function LoginPage({ onLogin, onBack }: { onLogin: (user: UserAccount) => void; 
 
 function CheckoutPage({
   user,
+  offer,
   onLoginRequired,
   onConfirm,
   onAccess,
   onBack,
 }: {
   user: UserAccount | null;
+  offer: Offer;
   onLoginRequired: () => void;
   onConfirm: (payment: CheckoutPayment) => void;
   onAccess: () => void;
@@ -760,6 +944,7 @@ function CheckoutPage({
     setProcessing(true);
     await new Promise((resolve) => window.setTimeout(resolve, 700));
     onConfirm({
+      offerId: offer.id,
       method,
       payerName: payerName.trim(),
       document: documentDigits,
@@ -767,7 +952,7 @@ function CheckoutPage({
     });
   };
 
-  const activePremium = isPremiumActive(user);
+  const activeOffer = hasOfferAccess(user, offer.id);
 
   return (
     <main className="max-w-5xl mx-auto px-4 lg:px-8 py-10">
@@ -777,11 +962,11 @@ function CheckoutPage({
       </button>
       <div className="grid lg:grid-cols-[1fr_360px] gap-4">
         <section className="bg-card border border-border p-6">
-          <p className="mono text-[10px] tracking-widest uppercase text-primary">Assinatura premium</p>
-          <h1 className="playfair text-3xl font-bold mt-2">Forex + IA por R$ 15/mes</h1>
-          <p className="text-muted-foreground text-sm leading-relaxed mt-3">Libere estudos completos de Forex, briefings de todos os topicos, matriz de traders de referencia, prompts de IA e a area exclusiva do assinante.</p>
+          <p className="mono text-[10px] tracking-widest uppercase text-primary">{offer.eyebrow}</p>
+          <h1 className="playfair text-3xl font-bold mt-2">{offer.title}</h1>
+          <p className="text-muted-foreground text-sm leading-relaxed mt-3">{offer.description}</p>
           <div className="grid sm:grid-cols-2 gap-3 mt-6">
-            {[...PREMIUM_FOREX.slice(0, 3), ...PREMIUM_AI.slice(0, 3)].map((item) => (
+            {offer.features.map((item) => (
               <div key={item} className="border border-border bg-background/40 p-4 text-xs leading-relaxed text-muted-foreground">
                 <LockKeyhole size={13} className="text-primary mb-2" />
                 {item}
@@ -797,23 +982,25 @@ function CheckoutPage({
         </section>
         <form onSubmit={submit} className="bg-card border border-border p-6 self-start">
           <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
-            <span className="text-sm">Plano mensal</span>
-            <span className="mono text-xl text-primary">R$ 15,00</span>
+            <span className="text-sm">{offer.title}</span>
+            <span className="mono text-xl text-primary">
+              {offer.price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+            </span>
           </div>
 
-          {activePremium ? (
+          {activeOffer ? (
             <div className="border border-emerald-400/25 bg-emerald-400/5 p-4 mb-5">
-              <p className="mono text-[10px] tracking-widest uppercase text-emerald-400">Premium ativo</p>
-              <p className="text-xs text-muted-foreground leading-relaxed mt-2">Seu acesso esta liberado ate {formatDate(user?.premiumUntil)}.</p>
+              <p className="mono text-[10px] tracking-widest uppercase text-emerald-400">Acesso ativo</p>
+              <p className="text-xs text-muted-foreground leading-relaxed mt-2">Este produto ja esta liberado para sua conta.</p>
               <button type="button" onClick={onAccess} className="mt-4 w-full bg-primary text-primary-foreground px-4 py-2 mono text-sm hover:bg-primary/90">
-                Acessar area premium
+                Acessar agora
               </button>
             </div>
           ) : null}
 
           <div className="space-y-3 text-xs text-muted-foreground mb-5">
             <p>Conta: {user?.email ?? "voce ainda nao entrou"}</p>
-            <p>Escolha o metodo e preencha os dados para liberar o conteudo premium neste navegador.</p>
+            <p>Escolha o metodo e preencha os dados para liberar este produto neste navegador.</p>
           </div>
 
           <div className="grid grid-cols-2 gap-2 mb-4">
@@ -839,7 +1026,7 @@ function CheckoutPage({
             onChange={(event) => setPayerName(event.target.value)}
             className="w-full bg-background border border-border px-3 py-2 mb-1 outline-none focus:border-primary"
             placeholder="Nome no pagamento"
-            disabled={activePremium}
+            disabled={activeOffer}
           />
           {errors.payerName && <p className="text-[11px] text-red-400 mb-3">{errors.payerName}</p>}
 
@@ -849,7 +1036,7 @@ function CheckoutPage({
             onChange={(event) => setDocument(onlyDigits(event.target.value).slice(0, 14))}
             className="w-full bg-background border border-border px-3 py-2 mb-1 outline-none focus:border-primary"
             placeholder="Somente numeros"
-            disabled={activePremium}
+            disabled={activeOffer}
           />
           {errors.document && <p className="text-[11px] text-red-400 mb-3">{errors.document}</p>}
 
@@ -861,7 +1048,7 @@ function CheckoutPage({
                 onChange={(event) => setCardNumber(formatCardNumber(event.target.value))}
                 className="w-full bg-background border border-border px-3 py-2 mb-1 outline-none focus:border-primary"
                 placeholder="4242 4242 4242 4242"
-                disabled={activePremium}
+                disabled={activeOffer}
               />
               {errors.cardNumber && <p className="text-[11px] text-red-400 mb-3">{errors.cardNumber}</p>}
 
@@ -873,7 +1060,7 @@ function CheckoutPage({
                     onChange={(event) => setExpiry(formatExpiry(event.target.value))}
                     className="w-full bg-background border border-border px-3 py-2 mb-1 outline-none focus:border-primary"
                     placeholder="MM/AA"
-                    disabled={activePremium}
+                    disabled={activeOffer}
                   />
                   {errors.expiry && <p className="text-[11px] text-red-400">{errors.expiry}</p>}
                 </div>
@@ -884,7 +1071,7 @@ function CheckoutPage({
                     onChange={(event) => setCvc(onlyDigits(event.target.value).slice(0, 4))}
                     className="w-full bg-background border border-border px-3 py-2 mb-1 outline-none focus:border-primary"
                     placeholder="123"
-                    disabled={activePremium}
+                    disabled={activeOffer}
                   />
                   {errors.cvc && <p className="text-[11px] text-red-400">{errors.cvc}</p>}
                 </div>
@@ -893,7 +1080,7 @@ function CheckoutPage({
           ) : (
             <div className="border border-border bg-background/40 p-4 mt-3">
               <p className="mono text-[10px] tracking-widest uppercase text-primary">PIX copia e cola demo</p>
-              <p className="text-xs leading-relaxed text-muted-foreground mt-2 break-all">00020126580014br.gov.bcb.pix0136nexusfx-premium-demo520400005303986540515.005802BR5920NEXUSFX PREMIUM6009SAO PAULO62070503***6304DEMO</p>
+              <p className="text-xs leading-relaxed text-muted-foreground mt-2 break-all">00020126580014br.gov.bcb.pix0136nexusfx-{offer.id}-demo520400005303986540{String(offer.price.toFixed(2)).padStart(5, "0")}5802BR5920NEXUSFX6009SAO PAULO62070503***6304DEMO</p>
             </div>
           )}
 
@@ -903,16 +1090,16 @@ function CheckoutPage({
               checked={acceptedRisk}
               onChange={(event) => setAcceptedRisk(event.target.checked)}
               className="mt-1"
-              disabled={activePremium}
+              disabled={activeOffer}
             />
             <span>Entendo que o conteudo e educacional, nao promete rentabilidade e nao substitui decisao propria de risco.</span>
           </label>
           {errors.acceptedRisk && <p className="text-[11px] text-red-400 mt-2">{errors.acceptedRisk}</p>}
 
           {user ? (
-            <button disabled={processing || activePremium} className="mt-5 w-full inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-4 py-2 mono text-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed">
+            <button disabled={processing || activeOffer} className="mt-5 w-full inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-4 py-2 mono text-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed">
               <CreditCard size={15} />
-              {processing ? "Processando..." : "Aprovar pagamento e liberar"}
+              {processing ? "Processando..." : offer.cta}
             </button>
           ) : (
             <button type="button" onClick={onLoginRequired} className="mt-5 w-full bg-primary text-primary-foreground px-4 py-2 mono text-sm hover:bg-primary/90">Entrar para assinar</button>
@@ -923,8 +1110,8 @@ function CheckoutPage({
   );
 }
 
-function PremiumArea({ user, onSubscribe, onBack }: { user: UserAccount | null; onSubscribe: () => void; onBack: () => void }) {
-  const activePremium = isPremiumActive(user);
+function LegacyPremiumArea({ user, onSubscribe, onBack }: { user: UserAccount | null; onSubscribe: () => void; onBack: () => void }) {
+  const activePremium = hasPlanAccess(user, "pro");
 
   if (!user || !activePremium) {
     return (
@@ -1120,6 +1307,407 @@ function PremiumArea({ user, onSubscribe, onBack }: { user: UserAccount | null; 
   );
 }
 
+function LockedPanel({ title, detail, offerId, onCheckout }: { title: string; detail: string; offerId: OfferId; onCheckout: (offerId: OfferId) => void }) {
+  const offer = OFFERS[offerId];
+  return (
+    <div className="border border-primary/30 bg-primary/5 p-5">
+      <LockKeyhole size={20} className="text-primary mb-3" />
+      <h3 className="playfair text-xl font-bold">{title}</h3>
+      <p className="text-sm text-muted-foreground leading-relaxed mt-2">{detail}</p>
+      <button onClick={() => onCheckout(offerId)} className="mt-4 inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 mono text-sm hover:bg-primary/90">
+        {offer.cta}
+        <ArrowUpRight size={14} />
+      </button>
+    </div>
+  );
+}
+
+function PlansPage({ user, onCheckout, onBack }: { user: UserAccount | null; onCheckout: (offerId: OfferId) => void; onBack: () => void }) {
+  const currentPlan = getUserPlan(user);
+
+  return (
+    <main className="max-w-7xl mx-auto px-4 lg:px-8 py-10">
+      <button onClick={onBack} className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+        <ArrowLeft size={16} />
+        Voltar
+      </button>
+
+      <section className="mb-8">
+        <p className="mono text-[10px] tracking-widest uppercase text-primary">Monetizacao NexusFX</p>
+        <h1 className="playfair text-4xl font-bold mt-2">Planos para estudar mercado sem vender sinal</h1>
+        <p className="text-muted-foreground text-sm leading-relaxed mt-3 max-w-3xl">
+          A proposta do NexusFX e vender clareza, estudo, filtros e ferramentas educativas. O posicionamento fica mais profissional e reduz risco juridico: nada de call, entrada garantida ou promessa de lucro.
+        </p>
+      </section>
+
+      <section className="grid lg:grid-cols-3 gap-4 mb-10">
+        <article className="bg-card border border-border p-6">
+          <p className="mono text-[10px] tracking-widest uppercase text-muted-foreground">Free</p>
+          <h2 className="playfair text-2xl font-bold mt-2">R$ 0</h2>
+          <p className="text-sm text-muted-foreground mt-3">Noticias, artigos e glossario para atrair publico e criar confianca.</p>
+          <div className="mt-5 space-y-3">
+            {FREE_FEATURES.map((feature) => (
+              <p key={feature} className="text-xs text-muted-foreground flex gap-2">
+                <CheckCircle2 size={13} className="text-emerald-400 shrink-0" />
+                {feature}
+              </p>
+            ))}
+          </div>
+        </article>
+
+        {(["pro", "premium"] as OfferId[]).map((offerId) => {
+          const offer = OFFERS[offerId];
+          const active = offerId === currentPlan || (offerId === "pro" && currentPlan === "premium");
+          return (
+            <article key={offer.id} className={`border p-6 ${offer.id === "premium" ? "border-primary/40 bg-primary/5" : "border-border bg-card"}`}>
+              <p className="mono text-[10px] tracking-widest uppercase text-primary">{offer.eyebrow}</p>
+              <h2 className="playfair text-2xl font-bold mt-2">{offer.title}</h2>
+              <p className="mono text-3xl text-primary mt-4">
+                {offer.price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                <span className="text-xs text-muted-foreground"> {offer.recurrence}</span>
+              </p>
+              <p className="text-sm text-muted-foreground mt-3">{offer.description}</p>
+              <div className="mt-5 space-y-3">
+                {offer.features.map((feature) => (
+                  <p key={feature} className="text-xs text-muted-foreground flex gap-2">
+                    <CheckCircle2 size={13} className="text-emerald-400 shrink-0" />
+                    {feature}
+                  </p>
+                ))}
+              </div>
+              <button disabled={active} onClick={() => onCheckout(offer.id)} className="mt-6 w-full bg-primary text-primary-foreground px-4 py-2 mono text-sm hover:bg-primary/90 disabled:opacity-50">
+                {active ? "Plano ativo" : offer.cta}
+              </button>
+            </article>
+          );
+        })}
+      </section>
+
+      <section className="grid lg:grid-cols-2 gap-4">
+        {(["newsletter", "course"] as OfferId[]).map((offerId) => {
+          const offer = OFFERS[offerId];
+          const active = hasOfferAccess(user, offerId);
+          return (
+            <article key={offer.id} className="bg-card border border-border p-6">
+              <p className="mono text-[10px] tracking-widest uppercase text-primary">{offer.eyebrow}</p>
+              <h2 className="playfair text-2xl font-bold mt-2">{offer.title}</h2>
+              <p className="mono text-2xl text-primary mt-3">
+                {offer.price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                <span className="text-xs text-muted-foreground"> {offer.recurrence}</span>
+              </p>
+              <p className="text-sm text-muted-foreground mt-3">{offer.description}</p>
+              <button disabled={active} onClick={() => onCheckout(offer.id)} className="mt-5 bg-primary text-primary-foreground px-4 py-2 mono text-sm hover:bg-primary/90 disabled:opacity-50">
+                {active ? "Liberado" : offer.cta}
+              </button>
+            </article>
+          );
+        })}
+      </section>
+    </main>
+  );
+}
+
+function PremiumArea({
+  user,
+  onSubscribe,
+  onBack,
+  onOpenPage,
+  onCheckout,
+}: {
+  user: UserAccount | null;
+  onSubscribe: () => void;
+  onBack: () => void;
+  onOpenPage: (view: AppView) => void;
+  onCheckout: (offerId: OfferId) => void;
+}) {
+  const plan = getUserPlan(user);
+
+  if (!user || plan === "free") {
+    return (
+      <main className="max-w-3xl mx-auto px-4 py-12">
+        <button onClick={onBack} className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+          <ArrowLeft size={16} />
+          Voltar
+        </button>
+        <div className="bg-card border border-border p-6 text-center">
+          <LockKeyhole size={30} className="mx-auto text-primary mb-4" />
+          <h1 className="playfair text-3xl font-bold">Area de assinante bloqueada</h1>
+          <p className="text-muted-foreground text-sm mt-3">Escolha Pro ou Premium para liberar estudos, resumos, filtros e ferramentas educativas.</p>
+          <button onClick={onSubscribe} className="mt-6 bg-primary text-primary-foreground px-4 py-2 mono text-sm hover:bg-primary/90">Ver planos</button>
+        </div>
+      </main>
+    );
+  }
+
+  const pages = [
+    { title: "Estudos", detail: "Trilhas, glossario, quizzes e simulador de carteira ficticia.", view: "studies" as AppView, locked: false },
+    { title: "Newsletter", detail: "Morning Brief com noticias, impacto, termos e agenda.", view: "newsletter" as AppView, locked: false },
+    { title: "Curso", detail: "Investimentos do Zero, aulas, PDFs e exercicios.", view: "course" as AppView, locked: !hasCourseAccess(user) },
+    { title: "IA Nexus", detail: "Resumo de noticias e IA avancada para estudo e operacoes simuladas.", view: "ai" as AppView, locked: false },
+  ];
+
+  return (
+    <main className="max-w-7xl mx-auto px-4 lg:px-8 py-10">
+      <button onClick={onBack} className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+        <ArrowLeft size={16} />
+        Voltar
+      </button>
+      <section className="border border-primary/30 bg-primary/5 p-6 lg:p-8 mb-8">
+        <p className="mono text-[10px] tracking-widest uppercase text-primary">Hub do assinante</p>
+        <h1 className="playfair text-4xl font-bold mt-2">NexusFX {plan === "premium" ? "Premium" : "Pro"}</h1>
+        <p className="text-sm text-muted-foreground leading-relaxed mt-3 max-w-3xl">
+          Aqui voce escolhe a pagina que quer usar. Cada area tem uma entrega diferente: estudos, newsletter, curso e IA.
+        </p>
+        <div className="flex flex-wrap gap-2 mt-4">
+          <span className="mono text-[10px] tracking-widest uppercase border border-emerald-400/30 text-emerald-400 px-2 py-1">Plano ativo ate {formatDate(user.premiumUntil)}</span>
+          {user.lastPayment && <span className="mono text-[10px] tracking-widest uppercase border border-border text-muted-foreground px-2 py-1">Recibo {user.lastPayment.id}</span>}
+        </div>
+      </section>
+
+      <section className="grid md:grid-cols-2 xl:grid-cols-4 gap-4">
+        {pages.map((page) => (
+          <article key={page.title} className="bg-card border border-border p-5">
+            <h2 className="playfair text-xl font-bold">{page.title}</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed mt-2">{page.detail}</p>
+            {page.locked ? (
+              <button onClick={() => onCheckout("course")} className="mt-5 w-full border border-primary/40 text-primary px-4 py-2 mono text-sm hover:bg-primary/10">Comprar curso</button>
+            ) : (
+              <button onClick={() => onOpenPage(page.view)} className="mt-5 w-full bg-primary text-primary-foreground px-4 py-2 mono text-sm hover:bg-primary/90">Abrir pagina</button>
+            )}
+          </article>
+        ))}
+      </section>
+    </main>
+  );
+}
+
+function StudiesPage({ user, onCheckout, onBack }: { user: UserAccount | null; onCheckout: (offerId: OfferId) => void; onBack: () => void }) {
+  const pro = hasPlanAccess(user, "pro");
+
+  return (
+    <main className="max-w-7xl mx-auto px-4 lg:px-8 py-10">
+      <button onClick={onBack} className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+        <ArrowLeft size={16} />
+        Voltar
+      </button>
+      <section className="mb-8">
+        <p className="mono text-[10px] tracking-widest uppercase text-primary">Area de estudos</p>
+        <h1 className="playfair text-4xl font-bold mt-2">Aprenda mercado por trilhas</h1>
+        <p className="text-sm text-muted-foreground leading-relaxed mt-3 max-w-3xl">
+          A pagina Free ensina base. O Pro libera filtros, simulador, quizzes e watchlist educativa.
+        </p>
+      </section>
+
+      <section className="grid lg:grid-cols-3 gap-4 mb-10">
+        {STUDY_TRACKS.map((track) => (
+          <article key={track.level} className="bg-card border border-border p-5">
+            <p className="mono text-[10px] tracking-widest uppercase text-primary">{track.level}</p>
+            <h2 className="playfair text-xl font-bold mt-2">{track.title}</h2>
+            <div className="mt-4 space-y-3">
+              {track.lessons.map((lesson) => (
+                <p key={lesson} className="text-xs text-muted-foreground flex gap-2">
+                  <CheckCircle2 size={13} className="text-emerald-400 shrink-0" />
+                  {lesson}
+                </p>
+              ))}
+            </div>
+          </article>
+        ))}
+      </section>
+
+      <section className="grid lg:grid-cols-[1fr_360px] gap-4">
+        <div className="bg-card border border-border p-6">
+          <h2 className="playfair text-2xl font-bold">Glossario Free</h2>
+          <div className="grid sm:grid-cols-2 gap-3 mt-5">
+            {GLOSSARY.map((item) => (
+              <div key={item.term} className="border border-border bg-background/40 p-4">
+                <p className="mono text-[10px] tracking-widest uppercase text-primary">{item.term}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed mt-2">{item.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {pro ? (
+          <aside className="bg-card border border-border p-6">
+            <h2 className="playfair text-2xl font-bold">Ferramentas Pro</h2>
+            <div className="mt-5 space-y-3">
+              {["Quiz semanal", "Watchlist educativa", "Simulador de carteira ficticia", "Filtros de noticias importantes"].map((item) => (
+                <div key={item} className="border border-border bg-background/40 p-4 text-sm text-muted-foreground">{item}</div>
+              ))}
+            </div>
+          </aside>
+        ) : (
+          <LockedPanel title="Ferramentas Pro bloqueadas" detail="Assine o Pro para liberar quiz, watchlist, filtros e simulador de carteira ficticia." offerId="pro" onCheckout={onCheckout} />
+        )}
+      </section>
+    </main>
+  );
+}
+
+function NewsletterPage({ user, onCheckout, onBack }: { user: UserAccount | null; onCheckout: (offerId: OfferId) => void; onBack: () => void }) {
+  const access = hasNewsletterAccess(user);
+
+  return (
+    <main className="max-w-6xl mx-auto px-4 lg:px-8 py-10">
+      <button onClick={onBack} className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+        <ArrowLeft size={16} />
+        Voltar
+      </button>
+      <section className="grid lg:grid-cols-[1fr_340px] gap-4">
+        <div className="bg-card border border-border p-6">
+          <p className="mono text-[10px] tracking-widest uppercase text-primary">NexusFX Morning Brief</p>
+          <h1 className="playfair text-4xl font-bold mt-2">Newsletter premium</h1>
+          <p className="text-sm text-muted-foreground leading-relaxed mt-3">Todo dia: noticias, impacto no mercado, termos explicados, agenda economica e o que estudar.</p>
+          <div className="mt-6 space-y-3">
+            {(access ? DAILY_BRIEF : DAILY_BRIEF.slice(0, 2)).map((item) => (
+              <div key={item} className="border border-border bg-background/40 p-4 text-sm text-muted-foreground">{item}</div>
+            ))}
+          </div>
+          {!access && <p className="text-xs text-muted-foreground mt-4">Assine a newsletter ou o Pro para ver o briefing completo todos os dias.</p>}
+        </div>
+
+        <aside className="self-start">
+          {access ? (
+            <div className="bg-card border border-border p-5">
+              <h2 className="playfair text-xl font-bold">Resumo semanal</h2>
+              <div className="mt-4 space-y-3">
+                {WEEKLY_BRIEF.map((item) => (
+                  <p key={item} className="text-xs text-muted-foreground leading-relaxed flex gap-2">
+                    <CheckCircle2 size={13} className="text-emerald-400 shrink-0" />
+                    {item}
+                  </p>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <LockedPanel title="Morning Brief completo" detail="Comece pela newsletter barata de R$ 9,90/mes ou assine o Pro." offerId="newsletter" onCheckout={onCheckout} />
+          )}
+        </aside>
+      </section>
+    </main>
+  );
+}
+
+function CoursePage({ user, onCheckout, onBack }: { user: UserAccount | null; onCheckout: (offerId: OfferId) => void; onBack: () => void }) {
+  const access = hasCourseAccess(user);
+
+  return (
+    <main className="max-w-7xl mx-auto px-4 lg:px-8 py-10">
+      <button onClick={onBack} className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+        <ArrowLeft size={16} />
+        Voltar
+      </button>
+      <section className="mb-8">
+        <p className="mono text-[10px] tracking-widest uppercase text-primary">Curso dentro da plataforma</p>
+        <h1 className="playfair text-4xl font-bold mt-2">Investimentos do Zero - Metodo NexusFX</h1>
+        <p className="text-sm text-muted-foreground leading-relaxed mt-3 max-w-3xl">Curso separado para transformar visitantes em alunos: aulas, PDFs, exercicios e quizzes.</p>
+      </section>
+      <section className="grid lg:grid-cols-[1fr_340px] gap-4">
+        <div className="grid md:grid-cols-2 gap-3">
+          {COURSE_MODULES.map((module, index) => (
+            <article key={module.title} className={`border p-5 ${access ? "border-border bg-card" : index < 2 ? "border-border bg-card" : "border-border bg-card opacity-60"}`}>
+              <p className="mono text-[10px] tracking-widest uppercase text-primary">Modulo {index + 1}</p>
+              <h2 className="playfair text-xl font-bold mt-2">{module.title}</h2>
+              <p className="text-xs text-muted-foreground leading-relaxed mt-3">{module.detail}</p>
+              {!access && index >= 2 && <p className="mono text-[10px] tracking-widest uppercase text-amber-400 mt-4">Bloqueado</p>}
+            </article>
+          ))}
+        </div>
+        <aside className="self-start">
+          {access ? (
+            <div className="border border-emerald-400/25 bg-emerald-400/5 p-5">
+              <p className="mono text-[10px] tracking-widest uppercase text-emerald-400">Curso liberado</p>
+              <p className="text-sm text-muted-foreground leading-relaxed mt-3">Aulas, PDFs e exercicios estao disponiveis nesta conta.</p>
+            </div>
+          ) : (
+            <LockedPanel title="Comprar o curso" detail="Acesso unico ao curso completo por R$ 97." offerId="course" onCheckout={onCheckout} />
+          )}
+        </aside>
+      </section>
+    </main>
+  );
+}
+
+function AiLabPage({ user, articles, selectedPair, onCheckout, onBack }: { user: UserAccount | null; articles: NewsArticle[]; selectedPair: typeof FOREX_PAIRS[number]; onCheckout: (offerId: OfferId) => void; onBack: () => void }) {
+  const pro = hasPlanAccess(user, "pro");
+  const premium = hasPlanAccess(user, "premium");
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState("");
+  const important = articles.slice(0, 6);
+  const categoryCount = CATS.filter((cat) => cat !== "TODOS")
+    .map((cat) => `${CAT_LABELS[cat]}: ${articles.filter((item) => item.cat === cat).length}`)
+    .join(" | ");
+
+  const runAdvancedAi = (event: FormEvent) => {
+    event.preventDefault();
+    if (!premium || !question.trim()) return;
+    setAnswer(
+      `Analise educacional NexusFX: antes de qualquer decisao, transforme sua pergunta em tese, risco e invalidacao. Para ${selectedPair.pair}, confirme contexto macro, volatilidade, horario da sessao, spread e tamanho de posicao. Pergunta recebida: "${question.trim()}". Resposta: estude o cenario em tres partes - o que fortalece a tese, o que invalida e qual perda maxima voce aceita. Isto nao e recomendacao de compra ou venda.`,
+    );
+  };
+
+  return (
+    <main className="max-w-7xl mx-auto px-4 lg:px-8 py-10">
+      <button onClick={onBack} className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+        <ArrowLeft size={16} />
+        Voltar
+      </button>
+      <section className="mb-8">
+        <p className="mono text-[10px] tracking-widest uppercase text-primary">IA NexusFX</p>
+        <h1 className="playfair text-4xl font-bold mt-2">Resumo de noticias e IA avancada</h1>
+        <p className="text-sm text-muted-foreground leading-relaxed mt-3 max-w-3xl">
+          A IA de resumo ajuda assinantes Pro e Premium a estudar noticias. A IA avancada para estudo e operacoes simuladas so abre no plano Premium.
+        </p>
+      </section>
+
+      <section className="grid lg:grid-cols-[1fr_380px] gap-4">
+        <div className="bg-card border border-border p-6">
+          <h2 className="playfair text-2xl font-bold">IA que resume todas as noticias</h2>
+          {pro ? (
+            <>
+              <div className="border border-border bg-background/40 p-4 mt-5">
+                <p className="mono text-[10px] tracking-widest uppercase text-primary">Mapa do feed</p>
+                <p className="text-sm text-muted-foreground leading-relaxed mt-2">{categoryCount || "Feed ainda carregando."}</p>
+              </div>
+              <div className="mt-4 space-y-3">
+                {important.map((article) => (
+                  <div key={article.id} className="border border-border bg-background/40 p-4">
+                    <CategoryBadge cat={article.cat} />
+                    <p className="text-sm mt-2">{article.title}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed mt-2">Resumo IA: {article.excerpt}</p>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <LockedPanel title="Resumo IA bloqueado" detail="Assine o Pro para liberar a IA que resume noticias, organiza impacto e aponta termos para estudar." offerId="pro" onCheckout={onCheckout} />
+          )}
+        </div>
+
+        <aside className="bg-card border border-border p-6 self-start">
+          <h2 className="playfair text-2xl font-bold">IA avancada Premium</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed mt-3">Ajuda a estruturar estudo, tese, risco e operacao simulada. Nao executa ordens e nao promete lucro.</p>
+          {premium ? (
+            <form onSubmit={runAdvancedAi} className="mt-5">
+              <textarea
+                value={question}
+                onChange={(event) => setQuestion(event.target.value)}
+                className="w-full min-h-32 bg-background border border-border px-3 py-2 outline-none focus:border-primary text-sm"
+                placeholder="Ex: Quero estudar EUR/USD hoje. Quais riscos, noticias e invalidacoes devo observar?"
+              />
+              <button className="mt-3 w-full bg-primary text-primary-foreground px-4 py-2 mono text-sm hover:bg-primary/90">Analisar com IA Premium</button>
+              {answer && <div className="mt-4 border border-primary/30 bg-primary/5 p-4 text-sm text-muted-foreground leading-relaxed">{answer}</div>}
+            </form>
+          ) : (
+            <LockedPanel title="IA avancada so no Premium" detail="A IA para estudo de operacoes, risco e revisao de tese fica exclusiva no plano Premium de R$ 39,90/mes." offerId="premium" onCheckout={onCheckout} />
+          )}
+        </aside>
+      </section>
+    </main>
+  );
+}
+
 function ArticlePage({ article, related, onBack, onOpen }: { article: NewsArticle; related: NewsArticle[]; onBack: () => void; onOpen: (article: NewsArticle) => void }) {
   return (
     <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8">
@@ -1202,7 +1790,8 @@ function ArticlePage({ article, related, onBack, onOpen }: { article: NewsArticl
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("TODOS");
-  const [view, setView] = useState<"home" | "login" | "checkout" | "premium">("home");
+  const [view, setView] = useState<AppView>("home");
+  const [checkoutOfferId, setCheckoutOfferId] = useState<OfferId>(DEFAULT_OFFER_ID);
   const [navOpen, setNavOpen] = useState(false);
   const [time, setTime] = useState(new Date());
   const [selectedPair, setSelectedPair] = useState(FOREX_PAIRS[0]);
@@ -1229,7 +1818,9 @@ export default function App() {
   const topStories = filtered.length ? filtered : allNews;
   const featured = topStories[0] ?? NEWS[0];
   const related = selectedArticle ? allNews.filter((item) => item.id !== selectedArticle.id && item.cat === selectedArticle.cat) : [];
-  const hasPremium = isPremiumActive(user);
+  const currentPlan = getUserPlan(user);
+  const hasPaidPlan = hasPlanAccess(user, "pro");
+  const checkoutOffer = OFFERS[checkoutOfferId];
   const searchResults = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     if (!query) return allNews.slice(0, 6);
@@ -1244,9 +1835,9 @@ export default function App() {
   const notifications = useMemo(
     () => [
       {
-        title: hasPremium ? "Premium ativo" : "Premium bloqueado",
-        detail: hasPremium ? `Acesso liberado ate ${formatDate(user?.premiumUntil)}.` : "Finalize o checkout para abrir o hub de IA e Forex.",
-        tone: hasPremium ? "text-emerald-400" : "text-amber-400",
+        title: hasPaidPlan ? `Plano ${currentPlan.toUpperCase()} ativo` : "Plano pago bloqueado",
+        detail: hasPaidPlan ? `Acesso liberado ate ${formatDate(user?.premiumUntil)}.` : "Assine Pro ou Premium para abrir estudos, newsletter e IA.",
+        tone: hasPaidPlan ? "text-emerald-400" : "text-amber-400",
       },
       {
         title: "Tempo real",
@@ -1259,7 +1850,7 @@ export default function App() {
         tone: selectedPair.pct >= 0 ? "text-emerald-400" : "text-red-400",
       },
     ],
-    [hasPremium, liveStatus, selectedPair, user?.premiumUntil],
+    [currentPlan, hasPaidPlan, liveStatus, selectedPair, user?.premiumUntil],
   );
 
   useEffect(() => {
@@ -1267,6 +1858,7 @@ export default function App() {
       const hash = window.location.hash;
       const newsMatch = hash.match(/^#\/noticia\/(.+)$/);
       const categoryMatch = hash.match(/^#\/categoria\/(.+)$/);
+      const checkoutMatch = hash.match(/^#\/checkout\/(.+)$/);
 
       if (hash === "#/login") {
         setView("login");
@@ -1274,7 +1866,46 @@ export default function App() {
         return;
       }
 
+      if (hash === "#/plans" || hash === "#/planos") {
+        setView("plans");
+        setSelectedArticle(null);
+        return;
+      }
+
+      if (hash === "#/studies" || hash === "#/estudos") {
+        setView("studies");
+        setSelectedArticle(null);
+        return;
+      }
+
+      if (hash === "#/newsletter") {
+        setView("newsletter");
+        setSelectedArticle(null);
+        return;
+      }
+
+      if (hash === "#/course" || hash === "#/curso") {
+        setView("course");
+        setSelectedArticle(null);
+        return;
+      }
+
+      if (hash === "#/ai" || hash === "#/ia") {
+        setView("ai");
+        setSelectedArticle(null);
+        return;
+      }
+
+      if (checkoutMatch) {
+        const offerId = checkoutMatch[1];
+        setCheckoutOfferId(isOfferId(offerId) ? offerId : DEFAULT_OFFER_ID);
+        setView("checkout");
+        setSelectedArticle(null);
+        return;
+      }
+
       if (hash === "#/checkout") {
+        setCheckoutOfferId(DEFAULT_OFFER_ID);
         setView("checkout");
         setSelectedArticle(null);
         return;
@@ -1373,6 +2004,24 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const openPage = (nextView: AppView) => {
+    closeOverlays();
+    setSelectedArticle(null);
+    const hashes: Record<AppView, string> = {
+      home: "#/",
+      login: "#/login",
+      checkout: `#/checkout/${checkoutOfferId}`,
+      premium: "#/premium",
+      plans: "#/planos",
+      studies: "#/estudos",
+      newsletter: "#/newsletter",
+      course: "#/curso",
+      ai: "#/ia",
+    };
+    window.location.hash = hashes[nextView];
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const saveUser = (nextUser: UserAccount | null) => {
     setUser(nextUser);
     if (nextUser) localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(nextUser));
@@ -1385,38 +2034,61 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const openCheckout = () => {
+  const openCheckout = (offerId: OfferId = DEFAULT_OFFER_ID) => {
     closeOverlays();
-    window.location.hash = user ? (hasPremium ? "#/premium" : "#/checkout") : "#/login";
+    setCheckoutOfferId(offerId);
+    localStorage.setItem(PENDING_OFFER_KEY, offerId);
+    window.location.hash = user ? (hasOfferAccess(user, offerId) ? "#/premium" : `#/checkout/${offerId}`) : "#/login";
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const openPremium = () => {
     closeOverlays();
-    window.location.hash = "#/premium";
+    window.location.hash = hasPaidPlan ? "#/premium" : "#/planos";
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const confirmPayment = (payment: CheckoutPayment) => {
     if (!user) return;
+    const offer = OFFERS[payment.offerId];
     const paidAt = new Date();
     const validUntil = addDays(paidAt, SUBSCRIPTION_DAYS);
-    saveUser({
+    const nextUser: UserAccount = {
       ...user,
       name: payment.payerName || user.name,
-      premium: true,
-      plan: "monthly",
-      premiumSince: paidAt.toISOString(),
-      premiumUntil: validUntil.toISOString(),
       lastPayment: {
         id: createReceiptId(),
         method: payment.method,
-        amount: 15,
+        amount: offer.price,
         paidAt: paidAt.toISOString(),
+        offerId: payment.offerId,
         cardLast4: payment.cardLast4,
       },
-    });
-    window.location.hash = "#/premium";
+    };
+
+    if (payment.offerId === "pro" || payment.offerId === "premium") {
+      nextUser.plan = payment.offerId;
+      nextUser.premium = true;
+      nextUser.premiumSince = paidAt.toISOString();
+      nextUser.premiumUntil = validUntil.toISOString();
+    }
+
+    if (payment.offerId === "newsletter") {
+      nextUser.newsletterUntil = validUntil.toISOString();
+      nextUser.premium = hasPlanAccess(nextUser, "pro");
+    }
+
+    if (payment.offerId === "course") {
+      nextUser.coursePurchased = true;
+      nextUser.coursePurchasedAt = paidAt.toISOString();
+      nextUser.premium = hasPlanAccess(nextUser, "pro");
+    }
+
+    localStorage.removeItem(PENDING_OFFER_KEY);
+    saveUser(nextUser);
+
+    window.location.hash =
+      payment.offerId === "newsletter" ? "#/newsletter" : payment.offerId === "course" ? "#/curso" : "#/premium";
   };
 
   const logout = () => {
@@ -1449,12 +2121,16 @@ export default function App() {
                   {CAT_LABELS[cat]}
                 </button>
               ))}
+              <button onClick={() => openPage("studies")} className="text-[12px] xl:text-[13px] text-muted-foreground hover:text-foreground whitespace-nowrap">Estudos</button>
+              <button onClick={() => openPage("newsletter")} className="text-[12px] xl:text-[13px] text-muted-foreground hover:text-foreground whitespace-nowrap">Newsletter</button>
+              <button onClick={() => openPage("course")} className="text-[12px] xl:text-[13px] text-muted-foreground hover:text-foreground whitespace-nowrap">Curso</button>
+              <button onClick={() => openPage("ai")} className="text-[12px] xl:text-[13px] text-muted-foreground hover:text-foreground whitespace-nowrap">IA Nexus</button>
             </div>
             <div className="flex items-center gap-3">
               <span className="mono text-[11px] text-muted-foreground hidden md:block">{time.toLocaleTimeString("pt-BR")} BRT</span>
               <button onClick={openPremium} className="hidden sm:inline-flex items-center gap-1.5 text-[11px] mono border border-primary/30 text-primary px-3 py-1.5 hover:bg-primary/10">
-                {hasPremium ? <CheckCircle2 size={12} /> : <LockKeyhole size={12} />}
-                {hasPremium ? "Premium ativo" : "Premium"}
+                {hasPaidPlan ? <CheckCircle2 size={12} /> : <LockKeyhole size={12} />}
+                {hasPaidPlan ? currentPlan.toUpperCase() : "Planos"}
               </button>
               {user ? (
                 <button onClick={logout} className="hidden sm:inline-flex items-center gap-1.5 text-[11px] mono text-muted-foreground hover:text-foreground">
@@ -1501,7 +2177,11 @@ export default function App() {
                 {CAT_LABELS[cat]}
               </button>
             ))}
-            <button onClick={() => { openPremium(); setNavOpen(false); }} className="text-left text-sm text-primary py-1">{hasPremium ? "Area premium ativa" : "Area premium"}</button>
+            <button onClick={() => { openPage("studies"); setNavOpen(false); }} className="text-left text-sm text-muted-foreground py-1">Estudos</button>
+            <button onClick={() => { openPage("newsletter"); setNavOpen(false); }} className="text-left text-sm text-muted-foreground py-1">Newsletter</button>
+            <button onClick={() => { openPage("course"); setNavOpen(false); }} className="text-left text-sm text-muted-foreground py-1">Curso</button>
+            <button onClick={() => { openPage("ai"); setNavOpen(false); }} className="text-left text-sm text-muted-foreground py-1">IA Nexus</button>
+            <button onClick={() => { openPage(hasPaidPlan ? "premium" : "plans"); setNavOpen(false); }} className="text-left text-sm text-primary py-1">{hasPaidPlan ? "Hub do assinante" : "Planos"}</button>
             <button onClick={() => { user ? logout() : openLogin(); setNavOpen(false); }} className="text-left text-sm text-muted-foreground py-1">
               {user ? "Sair" : "Entrar"}
             </button>
@@ -1584,13 +2264,24 @@ export default function App() {
           onBack={openHome}
           onLogin={(nextUser) => {
             saveUser(nextUser);
-            window.location.hash = "#/checkout";
+            const pendingOffer = localStorage.getItem(PENDING_OFFER_KEY);
+            window.location.hash = pendingOffer && isOfferId(pendingOffer) ? `#/checkout/${pendingOffer}` : "#/planos";
           }}
         />
       ) : view === "checkout" ? (
-        <CheckoutPage user={user} onLoginRequired={openLogin} onConfirm={confirmPayment} onAccess={openPremium} onBack={openHome} />
+        <CheckoutPage user={user} offer={checkoutOffer} onLoginRequired={openLogin} onConfirm={confirmPayment} onAccess={() => openPage("premium")} onBack={() => openPage("plans")} />
+      ) : view === "plans" ? (
+        <PlansPage user={user} onCheckout={openCheckout} onBack={openHome} />
       ) : view === "premium" ? (
-        <PremiumArea user={user} onSubscribe={openCheckout} onBack={openHome} />
+        <PremiumArea user={user} onSubscribe={() => openPage("plans")} onBack={openHome} onOpenPage={openPage} onCheckout={openCheckout} />
+      ) : view === "studies" ? (
+        <StudiesPage user={user} onCheckout={openCheckout} onBack={openHome} />
+      ) : view === "newsletter" ? (
+        <NewsletterPage user={user} onCheckout={openCheckout} onBack={openHome} />
+      ) : view === "course" ? (
+        <CoursePage user={user} onCheckout={openCheckout} onBack={openHome} />
+      ) : view === "ai" ? (
+        <AiLabPage user={user} articles={allNews} selectedPair={selectedPair} onCheckout={openCheckout} onBack={openHome} />
       ) : selectedArticle ? (
         <ArticlePage article={selectedArticle} related={related.length ? related : allNews} onBack={openHome} onOpen={openArticle} />
       ) : (
@@ -1748,7 +2439,7 @@ export default function App() {
             </div>
 
             <div className="mt-4">
-              <PremiumBox title="Desbloqueie o estudo Forex completo" items={PREMIUM_FOREX} premium={hasPremium} onSubscribe={openCheckout} onAccess={openPremium} />
+              <PremiumBox title="Desbloqueie o estudo Forex completo" items={PREMIUM_FOREX} premium={hasPaidPlan} onSubscribe={() => openPage("plans")} onAccess={openPremium} />
             </div>
           </section>
 
@@ -1773,7 +2464,7 @@ export default function App() {
                   </div>
                 ))}
               </div>
-              <PremiumBox title="Curso de IA completo" items={PREMIUM_AI} premium={hasPremium} onSubscribe={openCheckout} onAccess={openPremium} />
+              <PremiumBox title="Curso de IA completo" items={PREMIUM_AI} premium={hasPaidPlan} onSubscribe={() => openPage("plans")} onAccess={openPremium} />
             </div>
           </section>
 

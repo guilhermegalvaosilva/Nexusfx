@@ -8,9 +8,13 @@ Plataforma React/Vite de noticias, Forex, IA e area premium por assinatura.
 - Painel Forex com pares, indicadores, grafico e estudos educacionais.
 - Conteudo gratuito de IA e chamadas para assinatura.
 - Login local para prototipo.
-- Checkout demo com cartao/PIX, validacao de campos, aceite de risco e recibo.
-- Bloqueio de area premium antes do pagamento.
-- Area premium liberada apos pagamento aprovado, com validade de 30 dias.
+- Planos Free, Pro e Premium.
+- Newsletter premium NexusFX Morning Brief.
+- Curso separado Investimentos do Zero.
+- Checkout demo com cartao/PIX, validacao de campos, aceite de risco e recibo por produto.
+- Paginas separadas para Estudos, Newsletter, Curso, IA Nexus e Hub do assinante.
+- IA de resumo de noticias para Pro/Premium.
+- IA avancada para estudos e operacoes simuladas exclusiva do Premium.
 - Busca de noticias e painel de alertas no topo.
 
 ## Rodar localmente
@@ -26,15 +30,23 @@ Para gerar build de producao:
 npm run build
 ```
 
-## Fluxo premium
+## Monetizacao
 
-1. Entrar ou criar conta com nome e email.
-2. Ir para checkout.
+- Free: R$ 0, com noticias, artigos, glossario e painel basico.
+- Pro: R$ 19,90/mes, com resumos premium, estudos, filtros, alertas, watchlist, simulador e quizzes.
+- Premium: R$ 39,90/mes, com comunidade, aulas, relatorios educativos, PDFs e IA avancada.
+- Newsletter: R$ 9,90/mes, com Morning Brief diario.
+- Curso Investimentos do Zero: R$ 97, pagamento unico.
+
+## Fluxo de compra
+
+1. Escolher produto em Planos.
+2. Entrar ou criar conta com nome e email.
 3. Preencher cartao ou selecionar PIX demo.
 4. Aceitar o aviso educacional/de risco.
 5. Aprovar pagamento.
-6. O app grava assinatura, recibo e validade no `localStorage`.
-7. A area premium passa a ficar liberada ate o vencimento.
+6. O app grava recibo, produto liberado e validade no `localStorage`.
+7. Cada pagina valida o acesso correto antes de mostrar o conteudo.
 
 ## Pagamento real
 
