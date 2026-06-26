@@ -46,6 +46,23 @@ type UserAccount = {
   name: string;
   email: string;
   premium: boolean;
+  plan?: "monthly";
+  premiumSince?: string;
+  premiumUntil?: string;
+  lastPayment?: {
+    id: string;
+    method: "card" | "pix";
+    amount: number;
+    paidAt: string;
+    cardLast4?: string;
+  };
+};
+
+type CheckoutPayment = {
+  method: "card" | "pix";
+  payerName: string;
+  document: string;
+  cardLast4?: string;
 };
 
 const FOREX_PAIRS = [
@@ -428,6 +445,41 @@ const slugify = (value: string) =>
 
 const articleHash = (article: NewsArticle) => `#/noticia/${article.id}`;
 const categoryHash = (cat: string) => `#/categoria/${cat.toLowerCase()}`;
+const SUBSCRIPTION_DAYS = 30;
+const USER_STORAGE_KEY = "nexusfx-user";
+
+const onlyDigits = (value: string) => value.replace(/\D/g, "");
+
+const formatCardNumber = (value: string) =>
+  onlyDigits(value)
+    .slice(0, 19)
+    .replace(/(.{4})/g, "$1 ")
+    .trim();
+
+const formatExpiry = (value: string) => {
+  const digits = onlyDigits(value).slice(0, 4);
+  if (digits.length <= 2) return digits;
+  return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+};
+
+const addDays = (date: Date, days: number) => {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+};
+
+const createReceiptId = () => `NX-${Date.now().toString(36).toUpperCase()}`;
+
+const formatDate = (value?: string) => {
+  if (!value) return "sem vencimento";
+  return new Date(value).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+};
+
+const isPremiumActive = (user: UserAccount | null) => {
+  if (!user?.premium) return false;
+  if (!user.premiumUntil) return true;
+  return new Date(user.premiumUntil).getTime() > Date.now();
+};
 
 const relativeTime = (date: Date) => {
   const diff = Math.max(0, Date.now() - date.getTime());
@@ -648,7 +700,75 @@ function LoginPage({ onLogin, onBack }: { onLogin: (user: UserAccount) => void; 
   );
 }
 
-function CheckoutPage({ user, onLoginRequired, onConfirm, onBack }: { user: UserAccount | null; onLoginRequired: () => void; onConfirm: () => void; onBack: () => void }) {
+function CheckoutPage({
+  user,
+  onLoginRequired,
+  onConfirm,
+  onAccess,
+  onBack,
+}: {
+  user: UserAccount | null;
+  onLoginRequired: () => void;
+  onConfirm: (payment: CheckoutPayment) => void;
+  onAccess: () => void;
+  onBack: () => void;
+}) {
+  const [method, setMethod] = useState<"card" | "pix">("card");
+  const [payerName, setPayerName] = useState(user?.name ?? "");
+  const [document, setDocument] = useState("");
+  const [cardNumber, setCardNumber] = useState("");
+  const [expiry, setExpiry] = useState("");
+  const [cvc, setCvc] = useState("");
+  const [acceptedRisk, setAcceptedRisk] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [processing, setProcessing] = useState(false);
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+
+    if (!user) {
+      onLoginRequired();
+      return;
+    }
+
+    const nextErrors: Record<string, string> = {};
+    const documentDigits = onlyDigits(document);
+    const cardDigits = onlyDigits(cardNumber);
+    const [expiryMonth, expiryYear] = expiry.split("/").map(Number);
+    const now = new Date();
+    const currentYear = Number(String(now.getFullYear()).slice(-2));
+    const expiryIsValid =
+      Number.isInteger(expiryMonth) &&
+      Number.isInteger(expiryYear) &&
+      expiryMonth >= 1 &&
+      expiryMonth <= 12 &&
+      (expiryYear > currentYear || (expiryYear === currentYear && expiryMonth >= now.getMonth() + 1));
+
+    if (!payerName.trim()) nextErrors.payerName = "Informe o nome do pagador.";
+    if (documentDigits.length < 11) nextErrors.document = "Informe CPF ou CNPJ valido.";
+    if (!acceptedRisk) nextErrors.acceptedRisk = "Confirme os termos educacionais e de risco.";
+
+    if (method === "card") {
+      if (cardDigits.length < 13) nextErrors.cardNumber = "Informe um numero de cartao valido.";
+      if (!expiryIsValid) nextErrors.expiry = "Informe uma validade futura no formato MM/AA.";
+      if (!/^\d{3,4}$/.test(cvc)) nextErrors.cvc = "Informe o CVV.";
+    }
+
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length) return;
+
+    setProcessing(true);
+    await new Promise((resolve) => window.setTimeout(resolve, 700));
+    onConfirm({
+      method,
+      payerName: payerName.trim(),
+      document: documentDigits,
+      cardLast4: method === "card" ? cardDigits.slice(-4) : undefined,
+    });
+  };
+
+  const activePremium = isPremiumActive(user);
+
   return (
     <main className="max-w-5xl mx-auto px-4 lg:px-8 py-10">
       <button onClick={onBack} className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
@@ -668,32 +788,145 @@ function CheckoutPage({ user, onLoginRequired, onConfirm, onBack }: { user: User
               </div>
             ))}
           </div>
+          <div className="mt-6 border border-amber-400/20 bg-amber-400/5 p-4">
+            <p className="mono text-[10px] tracking-widest uppercase text-amber-400">Ambiente demo</p>
+            <p className="text-xs leading-relaxed text-muted-foreground mt-2">
+              A logica de liberacao esta ativa no frontend: pagamento aprovado grava recibo, plano e validade. Para producao, conecte este submit ao provedor de pagamento e confirme por webhook no backend.
+            </p>
+          </div>
         </section>
-        <aside className="bg-card border border-border p-6 self-start">
+        <form onSubmit={submit} className="bg-card border border-border p-6 self-start">
           <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
             <span className="text-sm">Plano mensal</span>
             <span className="mono text-xl text-primary">R$ 15,00</span>
           </div>
+
+          {activePremium ? (
+            <div className="border border-emerald-400/25 bg-emerald-400/5 p-4 mb-5">
+              <p className="mono text-[10px] tracking-widest uppercase text-emerald-400">Premium ativo</p>
+              <p className="text-xs text-muted-foreground leading-relaxed mt-2">Seu acesso esta liberado ate {formatDate(user?.premiumUntil)}.</p>
+              <button type="button" onClick={onAccess} className="mt-4 w-full bg-primary text-primary-foreground px-4 py-2 mono text-sm hover:bg-primary/90">
+                Acessar area premium
+              </button>
+            </div>
+          ) : null}
+
           <div className="space-y-3 text-xs text-muted-foreground mb-5">
             <p>Conta: {user?.email ?? "voce ainda nao entrou"}</p>
-            <p>Pagamento de demonstracao. Em producao, troque este botao por Mercado Pago, Stripe ou PagSeguro com checkout seguro.</p>
+            <p>Escolha o metodo e preencha os dados para liberar o conteudo premium neste navegador.</p>
           </div>
+
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            <button
+              type="button"
+              onClick={() => setMethod("card")}
+              className={`border px-3 py-2 text-xs mono ${method === "card" ? "border-primary text-primary bg-primary/10" : "border-border text-muted-foreground hover:text-foreground"}`}
+            >
+              Cartao
+            </button>
+            <button
+              type="button"
+              onClick={() => setMethod("pix")}
+              className={`border px-3 py-2 text-xs mono ${method === "pix" ? "border-primary text-primary bg-primary/10" : "border-border text-muted-foreground hover:text-foreground"}`}
+            >
+              PIX
+            </button>
+          </div>
+
+          <label className="block text-xs text-muted-foreground mb-2">Nome do pagador</label>
+          <input
+            value={payerName}
+            onChange={(event) => setPayerName(event.target.value)}
+            className="w-full bg-background border border-border px-3 py-2 mb-1 outline-none focus:border-primary"
+            placeholder="Nome no pagamento"
+            disabled={activePremium}
+          />
+          {errors.payerName && <p className="text-[11px] text-red-400 mb-3">{errors.payerName}</p>}
+
+          <label className="block text-xs text-muted-foreground mb-2 mt-3">CPF/CNPJ</label>
+          <input
+            value={document}
+            onChange={(event) => setDocument(onlyDigits(event.target.value).slice(0, 14))}
+            className="w-full bg-background border border-border px-3 py-2 mb-1 outline-none focus:border-primary"
+            placeholder="Somente numeros"
+            disabled={activePremium}
+          />
+          {errors.document && <p className="text-[11px] text-red-400 mb-3">{errors.document}</p>}
+
+          {method === "card" ? (
+            <div className="mt-3">
+              <label className="block text-xs text-muted-foreground mb-2">Numero do cartao</label>
+              <input
+                value={cardNumber}
+                onChange={(event) => setCardNumber(formatCardNumber(event.target.value))}
+                className="w-full bg-background border border-border px-3 py-2 mb-1 outline-none focus:border-primary"
+                placeholder="4242 4242 4242 4242"
+                disabled={activePremium}
+              />
+              {errors.cardNumber && <p className="text-[11px] text-red-400 mb-3">{errors.cardNumber}</p>}
+
+              <div className="grid grid-cols-2 gap-3 mt-3">
+                <div>
+                  <label className="block text-xs text-muted-foreground mb-2">Validade</label>
+                  <input
+                    value={expiry}
+                    onChange={(event) => setExpiry(formatExpiry(event.target.value))}
+                    className="w-full bg-background border border-border px-3 py-2 mb-1 outline-none focus:border-primary"
+                    placeholder="MM/AA"
+                    disabled={activePremium}
+                  />
+                  {errors.expiry && <p className="text-[11px] text-red-400">{errors.expiry}</p>}
+                </div>
+                <div>
+                  <label className="block text-xs text-muted-foreground mb-2">CVV</label>
+                  <input
+                    value={cvc}
+                    onChange={(event) => setCvc(onlyDigits(event.target.value).slice(0, 4))}
+                    className="w-full bg-background border border-border px-3 py-2 mb-1 outline-none focus:border-primary"
+                    placeholder="123"
+                    disabled={activePremium}
+                  />
+                  {errors.cvc && <p className="text-[11px] text-red-400">{errors.cvc}</p>}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="border border-border bg-background/40 p-4 mt-3">
+              <p className="mono text-[10px] tracking-widest uppercase text-primary">PIX copia e cola demo</p>
+              <p className="text-xs leading-relaxed text-muted-foreground mt-2 break-all">00020126580014br.gov.bcb.pix0136nexusfx-premium-demo520400005303986540515.005802BR5920NEXUSFX PREMIUM6009SAO PAULO62070503***6304DEMO</p>
+            </div>
+          )}
+
+          <label className="flex items-start gap-2 text-xs text-muted-foreground leading-relaxed mt-5">
+            <input
+              type="checkbox"
+              checked={acceptedRisk}
+              onChange={(event) => setAcceptedRisk(event.target.checked)}
+              className="mt-1"
+              disabled={activePremium}
+            />
+            <span>Entendo que o conteudo e educacional, nao promete rentabilidade e nao substitui decisao propria de risco.</span>
+          </label>
+          {errors.acceptedRisk && <p className="text-[11px] text-red-400 mt-2">{errors.acceptedRisk}</p>}
+
           {user ? (
-            <button onClick={onConfirm} className="w-full inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-4 py-2 mono text-sm hover:bg-primary/90">
+            <button disabled={processing || activePremium} className="mt-5 w-full inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-4 py-2 mono text-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed">
               <CreditCard size={15} />
-              Simular pagamento aprovado
+              {processing ? "Processando..." : "Aprovar pagamento e liberar"}
             </button>
           ) : (
-            <button onClick={onLoginRequired} className="w-full bg-primary text-primary-foreground px-4 py-2 mono text-sm hover:bg-primary/90">Entrar para assinar</button>
+            <button type="button" onClick={onLoginRequired} className="mt-5 w-full bg-primary text-primary-foreground px-4 py-2 mono text-sm hover:bg-primary/90">Entrar para assinar</button>
           )}
-        </aside>
+        </form>
       </div>
     </main>
   );
 }
 
 function PremiumArea({ user, onSubscribe, onBack }: { user: UserAccount | null; onSubscribe: () => void; onBack: () => void }) {
-  if (!user?.premium) {
+  const activePremium = isPremiumActive(user);
+
+  if (!user || !activePremium) {
     return (
       <main className="max-w-3xl mx-auto px-4 py-12">
         <button onClick={onBack} className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
@@ -703,12 +936,14 @@ function PremiumArea({ user, onSubscribe, onBack }: { user: UserAccount | null; 
         <div className="bg-card border border-border p-6 text-center">
           <LockKeyhole size={30} className="mx-auto text-primary mb-4" />
           <h1 className="playfair text-3xl font-bold">Area premium bloqueada</h1>
-          <p className="text-muted-foreground text-sm mt-3">Assine por R$ 15/mes para liberar os estudos completos de Forex e IA.</p>
+          <p className="text-muted-foreground text-sm mt-3">Assine por R$ 15/mes para liberar os estudos completos de Forex, IA e todos os topicos premium.</p>
           <button onClick={onSubscribe} className="mt-6 bg-primary text-primary-foreground px-4 py-2 mono text-sm hover:bg-primary/90">Assinar agora</button>
         </div>
       </main>
     );
   }
+
+  const receipt = user.lastPayment;
 
   return (
     <main className="max-w-7xl mx-auto px-4 lg:px-8 py-10">
@@ -725,6 +960,11 @@ function PremiumArea({ user, onSubscribe, onBack }: { user: UserAccount | null; 
             <p className="text-muted-foreground text-sm leading-relaxed mt-4 max-w-3xl">
               Hub completo para IA, Forex, economia, mundo e geopolitica. A leitura cruza dados oficiais de mercado, boas praticas de risco e padroes observados em traders historicamente reconhecidos.
             </p>
+            <div className="flex flex-wrap gap-2 mt-4">
+              <span className="mono text-[10px] tracking-widest uppercase border border-emerald-400/30 text-emerald-400 px-2 py-1">Ativo ate {formatDate(user.premiumUntil)}</span>
+              {receipt && <span className="mono text-[10px] tracking-widest uppercase border border-border text-muted-foreground px-2 py-1">Recibo {receipt.id}</span>}
+              {receipt?.cardLast4 && <span className="mono text-[10px] tracking-widest uppercase border border-border text-muted-foreground px-2 py-1">Cartao final {receipt.cardLast4}</span>}
+            </div>
           </div>
           <div className="grid grid-cols-3 gap-2 lg:w-[420px]">
             {PREMIUM_MARKET_DATA.map((item) => (
@@ -970,10 +1210,18 @@ export default function App() {
   const [liveStatus, setLiveStatus] = useState("Conectando ao tempo real");
   const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
   const [user, setUser] = useState<UserAccount | null>(() => {
-    const saved = localStorage.getItem("nexusfx-user");
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem(USER_STORAGE_KEY);
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      localStorage.removeItem(USER_STORAGE_KEY);
+      return null;
+    }
   });
   const [refreshTick, setRefreshTick] = useState(0);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const chartData = useMemo(() => generateSparkline(selectedPair.value, 60), [selectedPair]);
 
   const allNews = useMemo(() => [...liveNews, ...NEWS], [liveNews]);
@@ -981,6 +1229,38 @@ export default function App() {
   const topStories = filtered.length ? filtered : allNews;
   const featured = topStories[0] ?? NEWS[0];
   const related = selectedArticle ? allNews.filter((item) => item.id !== selectedArticle.id && item.cat === selectedArticle.cat) : [];
+  const hasPremium = isPremiumActive(user);
+  const searchResults = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return allNews.slice(0, 6);
+
+    return allNews
+      .filter((article) => {
+        const haystack = `${article.title} ${article.excerpt} ${article.cat} ${article.author} ${article.body.join(" ")}`.toLowerCase();
+        return haystack.includes(query);
+      })
+      .slice(0, 9);
+  }, [allNews, searchQuery]);
+  const notifications = useMemo(
+    () => [
+      {
+        title: hasPremium ? "Premium ativo" : "Premium bloqueado",
+        detail: hasPremium ? `Acesso liberado ate ${formatDate(user?.premiumUntil)}.` : "Finalize o checkout para abrir o hub de IA e Forex.",
+        tone: hasPremium ? "text-emerald-400" : "text-amber-400",
+      },
+      {
+        title: "Tempo real",
+        detail: liveStatus,
+        tone: "text-sky-400",
+      },
+      {
+        title: `${selectedPair.pair} em foco`,
+        detail: `${selectedPair.pct >= 0 ? "Alta" : "Queda"} de ${Math.abs(selectedPair.pct).toFixed(2)}% no painel atual.`,
+        tone: selectedPair.pct >= 0 ? "text-emerald-400" : "text-red-400",
+      },
+    ],
+    [hasPremium, liveStatus, selectedPair, user?.premiumUntil],
+  );
 
   useEffect(() => {
     const syncFromHash = () => {
@@ -1061,7 +1341,14 @@ export default function App() {
     };
   }, [refreshTick]);
 
+  const closeOverlays = () => {
+    setSearchOpen(false);
+    setNotificationsOpen(false);
+    setNavOpen(false);
+  };
+
   const openArticle = (article: NewsArticle) => {
+    closeOverlays();
     setView("home");
     setSelectedArticle(article);
     window.location.hash = articleHash(article);
@@ -1069,6 +1356,7 @@ export default function App() {
   };
 
   const openCategory = (cat: string) => {
+    closeOverlays();
     setView("home");
     setSelectedArticle(null);
     setActiveTab(cat);
@@ -1077,6 +1365,7 @@ export default function App() {
   };
 
   const openHome = () => {
+    closeOverlays();
     setView("home");
     setSelectedArticle(null);
     setActiveTab("TODOS");
@@ -1086,32 +1375,52 @@ export default function App() {
 
   const saveUser = (nextUser: UserAccount | null) => {
     setUser(nextUser);
-    if (nextUser) localStorage.setItem("nexusfx-user", JSON.stringify(nextUser));
-    else localStorage.removeItem("nexusfx-user");
+    if (nextUser) localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(nextUser));
+    else localStorage.removeItem(USER_STORAGE_KEY);
   };
 
   const openLogin = () => {
+    closeOverlays();
     window.location.hash = "#/login";
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const openCheckout = () => {
-    window.location.hash = user ? "#/checkout" : "#/login";
+    closeOverlays();
+    window.location.hash = user ? (hasPremium ? "#/premium" : "#/checkout") : "#/login";
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const openPremium = () => {
+    closeOverlays();
     window.location.hash = "#/premium";
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const confirmPayment = () => {
+  const confirmPayment = (payment: CheckoutPayment) => {
     if (!user) return;
-    saveUser({ ...user, premium: true });
+    const paidAt = new Date();
+    const validUntil = addDays(paidAt, SUBSCRIPTION_DAYS);
+    saveUser({
+      ...user,
+      name: payment.payerName || user.name,
+      premium: true,
+      plan: "monthly",
+      premiumSince: paidAt.toISOString(),
+      premiumUntil: validUntil.toISOString(),
+      lastPayment: {
+        id: createReceiptId(),
+        method: payment.method,
+        amount: 15,
+        paidAt: paidAt.toISOString(),
+        cardLast4: payment.cardLast4,
+      },
+    });
     window.location.hash = "#/premium";
   };
 
   const logout = () => {
+    closeOverlays();
     saveUser(null);
     openHome();
   };
@@ -1144,8 +1453,8 @@ export default function App() {
             <div className="flex items-center gap-3">
               <span className="mono text-[11px] text-muted-foreground hidden md:block">{time.toLocaleTimeString("pt-BR")} BRT</span>
               <button onClick={openPremium} className="hidden sm:inline-flex items-center gap-1.5 text-[11px] mono border border-primary/30 text-primary px-3 py-1.5 hover:bg-primary/10">
-                <LockKeyhole size={12} />
-                Premium
+                {hasPremium ? <CheckCircle2 size={12} /> : <LockKeyhole size={12} />}
+                {hasPremium ? "Premium ativo" : "Premium"}
               </button>
               {user ? (
                 <button onClick={logout} className="hidden sm:inline-flex items-center gap-1.5 text-[11px] mono text-muted-foreground hover:text-foreground">
@@ -1158,8 +1467,27 @@ export default function App() {
                   Entrar
                 </button>
               )}
-              <button className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground"><Search size={16} /></button>
-              <button className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground"><Bell size={16} /></button>
+              <button
+                onClick={() => {
+                  setSearchOpen((value) => !value);
+                  setNotificationsOpen(false);
+                }}
+                className={`w-8 h-8 flex items-center justify-center hover:text-foreground ${searchOpen ? "text-primary" : "text-muted-foreground"}`}
+                aria-label="Buscar noticias"
+              >
+                <Search size={16} />
+              </button>
+              <button
+                onClick={() => {
+                  setNotificationsOpen((value) => !value);
+                  setSearchOpen(false);
+                }}
+                className={`relative w-8 h-8 flex items-center justify-center hover:text-foreground ${notificationsOpen ? "text-primary" : "text-muted-foreground"}`}
+                aria-label="Abrir alertas"
+              >
+                <Bell size={16} />
+                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-primary rounded-full" />
+              </button>
               <button className="lg:hidden w-8 h-8 flex items-center justify-center text-muted-foreground" onClick={() => setNavOpen((v) => !v)}>
                 {navOpen ? <X size={16} /> : <Menu size={16} />}
               </button>
@@ -1173,13 +1501,64 @@ export default function App() {
                 {CAT_LABELS[cat]}
               </button>
             ))}
-            <button onClick={() => { openPremium(); setNavOpen(false); }} className="text-left text-sm text-primary py-1">Area premium</button>
+            <button onClick={() => { openPremium(); setNavOpen(false); }} className="text-left text-sm text-primary py-1">{hasPremium ? "Area premium ativa" : "Area premium"}</button>
             <button onClick={() => { user ? logout() : openLogin(); setNavOpen(false); }} className="text-left text-sm text-muted-foreground py-1">
               {user ? "Sair" : "Entrar"}
             </button>
           </div>
         )}
       </nav>
+
+      {searchOpen && (
+        <section className="border-b border-border bg-card/95 backdrop-blur">
+          <div className="max-w-7xl mx-auto px-4 lg:px-8 py-4">
+            <div className="flex items-center gap-3 border border-border bg-background px-3 py-2">
+              <Search size={15} className="text-muted-foreground shrink-0" />
+              <input
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                className="w-full bg-transparent outline-none text-sm"
+                placeholder="Buscar por Forex, IA, economia, dolar..."
+                autoFocus
+              />
+              <button onClick={() => setSearchOpen(false)} className="text-muted-foreground hover:text-foreground" aria-label="Fechar busca">
+                <X size={15} />
+              </button>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
+              {searchResults.map((article) => (
+                <button key={article.id} onClick={() => openArticle(article)} className="text-left border border-border bg-background/50 p-4 hover:border-primary/30">
+                  <CategoryBadge cat={article.cat} />
+                  <p className="text-sm leading-snug mt-2 line-clamp-2">{article.title}</p>
+                  <p className="mono text-[10px] text-muted-foreground mt-2">{article.time} · {article.author}</p>
+                </button>
+              ))}
+            </div>
+            {!searchResults.length && <p className="text-sm text-muted-foreground mt-4">Nenhum resultado encontrado.</p>}
+          </div>
+        </section>
+      )}
+
+      {notificationsOpen && (
+        <section className="border-b border-border bg-card/95 backdrop-blur">
+          <div className="max-w-7xl mx-auto px-4 lg:px-8 py-4">
+            <div className="flex items-center justify-between gap-4 mb-3">
+              <p className="mono text-[10px] tracking-widest uppercase text-primary">Alertas NexusFX</p>
+              <button onClick={() => setNotificationsOpen(false)} className="text-muted-foreground hover:text-foreground" aria-label="Fechar alertas">
+                <X size={15} />
+              </button>
+            </div>
+            <div className="grid md:grid-cols-3 gap-3">
+              {notifications.map((item) => (
+                <div key={item.title} className="border border-border bg-background/50 p-4">
+                  <p className={`mono text-[10px] tracking-widest uppercase ${item.tone}`}>{item.title}</p>
+                  <p className="text-xs leading-relaxed text-muted-foreground mt-2">{item.detail}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <Ticker />
 
@@ -1209,7 +1588,7 @@ export default function App() {
           }}
         />
       ) : view === "checkout" ? (
-        <CheckoutPage user={user} onLoginRequired={openLogin} onConfirm={confirmPayment} onBack={openHome} />
+        <CheckoutPage user={user} onLoginRequired={openLogin} onConfirm={confirmPayment} onAccess={openPremium} onBack={openHome} />
       ) : view === "premium" ? (
         <PremiumArea user={user} onSubscribe={openCheckout} onBack={openHome} />
       ) : selectedArticle ? (
@@ -1369,7 +1748,7 @@ export default function App() {
             </div>
 
             <div className="mt-4">
-              <PremiumBox title="Desbloqueie o estudo Forex completo" items={PREMIUM_FOREX} premium={!!user?.premium} onSubscribe={openCheckout} onAccess={openPremium} />
+              <PremiumBox title="Desbloqueie o estudo Forex completo" items={PREMIUM_FOREX} premium={hasPremium} onSubscribe={openCheckout} onAccess={openPremium} />
             </div>
           </section>
 
@@ -1394,7 +1773,7 @@ export default function App() {
                   </div>
                 ))}
               </div>
-              <PremiumBox title="Curso de IA completo" items={PREMIUM_AI} premium={!!user?.premium} onSubscribe={openCheckout} onAccess={openPremium} />
+              <PremiumBox title="Curso de IA completo" items={PREMIUM_AI} premium={hasPremium} onSubscribe={openCheckout} onAccess={openPremium} />
             </div>
           </section>
 
