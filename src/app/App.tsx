@@ -5,7 +5,9 @@ import {
   ArrowUpRight,
   BarChart2,
   Bell,
+  BookOpen,
   Brain,
+  CheckCircle2,
   ChevronRight,
   Clock,
   CreditCard,
@@ -13,11 +15,15 @@ import {
   LockKeyhole,
   LogOut,
   Menu,
+  Radar,
   RefreshCw,
   Search,
+  ShieldCheck,
+  Target,
   TrendingDown,
   TrendingUp,
   User,
+  Zap,
   X,
 } from "lucide-react";
 import { Line, LineChart, ResponsiveContainer, Tooltip, YAxis } from "recharts";
@@ -219,10 +225,10 @@ const FOREX_STUDIES = [
 ];
 
 const PREMIUM_FOREX = [
-  "Mapa completo de suporte, resistencia e liquidez por par",
-  "Alertas de entrada, stop, alvo e invalidacao do setup",
-  "Estudo diario com calendario economico e risco por noticia",
-  "Historico dos sinais para acompanhar taxa de acerto",
+  "Mapa de suporte, resistencia, liquidez e contexto por par",
+  "Checklists de entrada, nao-entrada, stop e invalidacao",
+  "Estudo com calendario economico e risco por noticia",
+  "Diario de execucao para acompanhar processo e disciplina",
 ];
 
 const AI_LESSONS = [
@@ -232,10 +238,160 @@ const AI_LESSONS = [
 ];
 
 const PREMIUM_AI = [
-  "Aulas completas de prompts para vendas, estudos e negocios",
-  "Modelos prontos para copiar e adaptar",
-  "Estudos de caso com antes e depois",
-  "Trilha semanal para aprender IA do zero ao avancado",
+  "Prompts completos para macro, Forex, estudos e negocios",
+  "Modelos prontos para copiar, adaptar e revisar",
+  "Estudos de caso com antes, depois e criterio de qualidade",
+  "Trilha para aprender IA do basico ao uso profissional",
+];
+
+const PREMIUM_MARKET_DATA = [
+  {
+    label: "Mercado FX global",
+    value: "US$ 9,6 tri/dia",
+    detail: "Volume medio diario reportado pelo BIS em abril de 2025. Liquidez grande nao elimina risco, mas muda a leitura de fluxo.",
+  },
+  {
+    label: "Dolar no centro",
+    value: "89,2%",
+    detail: "Participacao do USD em uma ponta das operacoes globais de cambio. Por isso, juros e dados dos EUA seguem dominando regimes.",
+  },
+  {
+    label: "Regra do assinante",
+    value: "Risco primeiro",
+    detail: "Todo estudo parte de cenario, invalidacao e tamanho de posicao antes de falar em entrada ou alvo.",
+  },
+];
+
+const PREMIUM_TOPIC_BRIEFINGS = [
+  {
+    cat: "MUNDO",
+    title: "Radar global",
+    signal: "Fluxo de risco e liquidez",
+    bullets: [
+      "Separar manchete barulhenta de evento que muda juros, energia, comercio ou dolar.",
+      "Mapear sessoes: Asia cria direcao, Europa testa liquidez, Nova York confirma ou invalida.",
+      "Usar IA para resumir fontes, mas sempre confirmar dado primario antes de operar noticia.",
+    ],
+  },
+  {
+    cat: "ECONOMIA",
+    title: "Macro que move preco",
+    signal: "Juros, inflacao e crescimento",
+    bullets: [
+      "Priorizar CPI, payroll, decisoes de bancos centrais, PMI e curvas de juros.",
+      "Transformar cada dado em tres cenarios: acima, em linha e abaixo do consenso.",
+      "Conectar surpresa economica ao par correto: USD, JPY, EUR, GBP, BRL, ouro ou indices.",
+    ],
+  },
+  {
+    cat: "GEOPOLITICA",
+    title: "Risco geopolitico",
+    signal: "Energia, rotas e safe havens",
+    bullets: [
+      "Medir impacto em petroleo, gas, fretes, seguros, metais e moedas de refugio.",
+      "Evitar operar manchete inicial; esperar confirmacao de fonte e reprecificacao real.",
+      "Criar plano de protecao quando spread abre, liquidez some ou candle fica erratico.",
+    ],
+  },
+  {
+    cat: "IA",
+    title: "IA aplicada a mercado",
+    signal: "Pesquisa, sintese e disciplina",
+    bullets: [
+      "IA faz checklist, compara cenarios, resume calendario e encontra incoerencias na tese.",
+      "Nunca delegar decisao final: modelo pode errar dado, inventar fonte ou ignorar regime.",
+      "Melhor uso: diario de trade, plano pre-mercado, revisao pos-trade e estudo historico.",
+    ],
+  },
+  {
+    cat: "FOREX",
+    title: "Forex profissional",
+    signal: "Setup, risco e execucao",
+    bullets: [
+      "Operar menos pares e conhecer regime de cada um: tendencia, range, noticia ou choque.",
+      "Toda entrada precisa de gatilho, stop tecnico, stop financeiro e motivo de invalidacao.",
+      "Lucro vem de processo repetivel; alavancagem sem controle transforma erro pequeno em perda grande.",
+    ],
+  },
+];
+
+const TRADER_PLAYBOOKS = [
+  {
+    name: "Soros / Druckenmiller",
+    edge: "Macro assimetrico",
+    data: "Juros, politica monetaria, fluxo de capital, moedas e mudanca de regime.",
+    lesson: "Quando a tese macro e forte, o foco nao e acertar sempre; e perder pequeno ate a assimetria ficar clara.",
+  },
+  {
+    name: "Paul Tudor Jones",
+    edge: "Defesa antes do ataque",
+    data: "Drawdown, volatilidade, suporte, resistencia e sentimento de mercado.",
+    lesson: "O primeiro trabalho do trader e sobreviver. A leitura do risco vem antes da vontade de entrar.",
+  },
+  {
+    name: "Ed Seykota",
+    edge: "Sistemas e tendencia",
+    data: "Preco, medias, rompimentos, volatilidade e regras objetivas.",
+    lesson: "Processo simples, repetido com disciplina, vence opiniao brilhante que muda a cada candle.",
+  },
+  {
+    name: "Jim Simons",
+    edge: "Dados e estatistica",
+    data: "Padroes, series temporais, correlacoes, ruido, custo de transacao e validacao fora da amostra.",
+    lesson: "IA e estatistica ajudam a encontrar vantagem, mas sem teste, custo e controle de overfit a estrategia vira ilusao.",
+  },
+];
+
+const TRADER_CROSS_RULES = [
+  "Defina a tese antes do clique: qual dado provaria que voce esta errado?",
+  "Use tamanho pequeno quando a leitura e nova; aumente so quando ha evidencia, liquidez e controle emocional.",
+  "Nao misture noticia, scalping e swing no mesmo plano. Cada regime pede stop, tempo e alvo diferentes.",
+  "Registre tudo: par, horario, motivo, risco, execucao, emocao e aprendizado. O diario revela o trader real.",
+  "IA cruza informacao; o trader decide risco. Automatizar pesquisa nao significa terceirizar responsabilidade.",
+];
+
+const AI_FOREX_WORKFLOW = [
+  {
+    step: "1",
+    title: "Coleta macro",
+    prompt: "Resuma os eventos macro das proximas 24h para EUR/USD, USD/JPY e XAU/USD. Separe consenso, risco de surpresa e possivel impacto.",
+  },
+  {
+    step: "2",
+    title: "Cenario triplo",
+    prompt: "Crie tres cenarios para este par: alta, queda e lateralizacao. Para cada um, liste gatilho, invalidacao e o que nao operar.",
+  },
+  {
+    step: "3",
+    title: "Checklist tecnico",
+    prompt: "Analise tendencia, momentum, volatilidade, zonas de liquidez e horario da sessao. Nao recomende trade; apenas monte checklist.",
+  },
+  {
+    step: "4",
+    title: "Pos-trade",
+    prompt: "Revise este trade como mentor: o plano foi seguido? O risco estava correto? O que foi habilidade, sorte ou erro repetivel?",
+  },
+];
+
+const PREMIUM_AI_PROMPTS = [
+  "Atue como analista macro conservador. Liste o que pode fortalecer e enfraquecer o dolar hoje, com fontes que eu devo verificar manualmente.",
+  "Transforme minha tese em checklist objetivo de entrada, nao-entrada, stop tecnico, stop financeiro e condicao de cancelamento.",
+  "Pegue estes trades do meu diario e encontre padroes de erro por horario, par, noticia, pressa, revenge trade e excesso de alavancagem.",
+  "Crie um plano de estudo de 30 dias para Forex com foco em macro, price action, risco, psicologia e revisao semanal.",
+];
+
+const RISK_PROTOCOL = [
+  { rule: "Risco por trade", value: "0,25% a 1%", detail: "Faixa didatica para proteger capital enquanto o trader ainda valida processo." },
+  { rule: "Limite diario", value: "2 perdas", detail: "Parar quando o mercado ou a mente saem do plano evita transformar erro em desastre." },
+  { rule: "Alavancagem", value: "Usar menos", detail: "Forex permite alavancagem alta; profissional usa como ferramenta, nao como atalho." },
+  { rule: "Noticia forte", value: "Spread manda", detail: "Se spread, slippage ou volatilidade impedem stop limpo, o melhor trade pode ser nenhum." },
+];
+
+const PREMIUM_SOURCES = [
+  { label: "BIS FX Survey 2025", url: "https://www.bis.org/statistics/rpfx25.htm" },
+  { label: "CFTC Forex Fraud Advisory", url: "https://www.cftc.gov/LearnAndProtect/AdvisoriesAndArticles/fraudadv_forex.html" },
+  { label: "NFA Forex Investor Resource", url: "https://www.nfa.futures.org/investors/investor-resources/files/forex.pdf" },
+  { label: "Investor.gov Day Trading Risk", url: "https://www.investor.gov/introduction-investing/investing-basics/investment-products/stocks/day-trading-your-dollars-risk" },
 ];
 
 const RSS_FEEDS = [
@@ -503,7 +659,7 @@ function CheckoutPage({ user, onLoginRequired, onConfirm, onBack }: { user: User
         <section className="bg-card border border-border p-6">
           <p className="mono text-[10px] tracking-widest uppercase text-primary">Assinatura premium</p>
           <h1 className="playfair text-3xl font-bold mt-2">Forex + IA por R$ 15/mes</h1>
-          <p className="text-muted-foreground text-sm leading-relaxed mt-3">Libere estudos completos de Forex, previsoes educacionais, aulas de IA, modelos prontos e a area exclusiva do assinante.</p>
+          <p className="text-muted-foreground text-sm leading-relaxed mt-3">Libere estudos completos de Forex, briefings de todos os topicos, matriz de traders de referencia, prompts de IA e a area exclusiva do assinante.</p>
           <div className="grid sm:grid-cols-2 gap-3 mt-6">
             {[...PREMIUM_FOREX.slice(0, 3), ...PREMIUM_AI.slice(0, 3)].map((item) => (
               <div key={item} className="border border-border bg-background/40 p-4 text-xs leading-relaxed text-muted-foreground">
@@ -560,28 +716,166 @@ function PremiumArea({ user, onSubscribe, onBack }: { user: UserAccount | null; 
         <ArrowLeft size={16} />
         Voltar
       </button>
-      <div className="mb-8">
-        <p className="mono text-[10px] tracking-widest uppercase text-primary">Bem-vindo, {user.name}</p>
-        <h1 className="playfair text-3xl lg:text-4xl font-bold mt-1">Conteudo premium liberado</h1>
-      </div>
-      <div className="grid lg:grid-cols-2 gap-4">
-        <section className="bg-card border border-border p-6">
-          <h2 className="playfair text-2xl font-bold">Estudo Forex completo</h2>
-          <div className="mt-5 space-y-3">
-            {["EUR/USD: aguardar rompimento com candle de confirmacao", "USD/BRL: atencao ao fluxo estrangeiro e noticias fiscais", "XAU/USD: ouro favorecido em ambiente de queda de juros reais"].map((item) => (
-              <div key={item} className="border border-border bg-background/40 p-4 text-sm text-muted-foreground">{item}</div>
+
+      <div className="border border-primary/30 bg-primary/5 p-6 lg:p-8 mb-8">
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5">
+          <div>
+            <p className="mono text-[10px] tracking-widest uppercase text-primary">Pagamento aprovado · Bem-vindo, {user.name}</p>
+            <h1 className="playfair text-3xl lg:text-5xl font-bold mt-2">Conteudo premium liberado</h1>
+            <p className="text-muted-foreground text-sm leading-relaxed mt-4 max-w-3xl">
+              Hub completo para IA, Forex, economia, mundo e geopolitica. A leitura cruza dados oficiais de mercado, boas praticas de risco e padroes observados em traders historicamente reconhecidos.
+            </p>
+          </div>
+          <div className="grid grid-cols-3 gap-2 lg:w-[420px]">
+            {PREMIUM_MARKET_DATA.map((item) => (
+              <div key={item.label} className="border border-border bg-background/60 p-3">
+                <p className="mono text-[9px] tracking-widest uppercase text-muted-foreground">{item.label}</p>
+                <p className="mono text-lg text-primary mt-1">{item.value}</p>
+              </div>
             ))}
           </div>
-        </section>
-        <section className="bg-card border border-border p-6">
-          <h2 className="playfair text-2xl font-bold">Trilha IA premium</h2>
-          <div className="mt-5 space-y-3">
-            {["Prompt para estudar qualquer assunto em 30 dias", "Modelo de IA para criar anuncios e posts", "Checklist para validar respostas e evitar erro"].map((item) => (
-              <div key={item} className="border border-border bg-background/40 p-4 text-sm text-muted-foreground">{item}</div>
+        </div>
+      </div>
+
+      <section className="mb-12">
+        <div className="flex items-end justify-between gap-4 mb-5">
+          <div>
+            <p className="mono text-[10px] tracking-widest uppercase text-primary">Todos os topicos</p>
+            <h2 className="playfair text-2xl font-bold mt-1">Briefings premium por categoria</h2>
+          </div>
+          <BookOpen size={22} className="text-primary hidden sm:block" />
+        </div>
+        <div className="grid md:grid-cols-2 xl:grid-cols-5 gap-3">
+          {PREMIUM_TOPIC_BRIEFINGS.map((brief) => (
+            <article key={brief.cat} className="bg-card border border-border p-5">
+              <div className="flex items-center justify-between gap-3">
+                <CategoryBadge cat={brief.cat} />
+                <span className="text-primary">{CAT_ICONS[brief.cat]}</span>
+              </div>
+              <h3 className="playfair text-lg font-bold mt-4">{brief.title}</h3>
+              <p className="mono text-[10px] tracking-widest uppercase text-primary mt-1">{brief.signal}</p>
+              <div className="mt-4 space-y-3">
+                {brief.bullets.map((bullet) => (
+                  <p key={bullet} className="text-xs leading-relaxed text-muted-foreground flex gap-2">
+                    <CheckCircle2 size={13} className="text-emerald-400 mt-0.5 shrink-0" />
+                    <span>{bullet}</span>
+                  </p>
+                ))}
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="grid lg:grid-cols-[1fr_360px] gap-4 mb-12">
+        <div>
+          <div className="flex items-center gap-3 mb-5">
+            <Radar size={20} className="text-primary" />
+            <div>
+              <p className="mono text-[10px] tracking-widest uppercase text-primary">Cruzamento de traders</p>
+              <h2 className="playfair text-2xl font-bold">Matriz de traders de referencia</h2>
+            </div>
+          </div>
+          <div className="grid md:grid-cols-2 gap-3">
+            {TRADER_PLAYBOOKS.map((trader) => (
+              <article key={trader.name} className="bg-card border border-border p-5">
+                <p className="mono text-[10px] tracking-widest uppercase text-muted-foreground">{trader.edge}</p>
+                <h3 className="playfair text-xl font-bold mt-1">{trader.name}</h3>
+                <p className="text-xs leading-relaxed text-primary mt-3">{trader.data}</p>
+                <p className="text-sm leading-relaxed text-muted-foreground mt-3">{trader.lesson}</p>
+              </article>
             ))}
           </div>
-        </section>
-      </div>
+        </div>
+
+        <aside className="bg-card border border-border p-5 self-start">
+          <div className="flex items-center gap-2">
+            <ShieldCheck size={18} className="text-primary" />
+            <h3 className="playfair text-xl font-bold">Regras que se repetem</h3>
+          </div>
+          <div className="mt-5 space-y-3">
+            {TRADER_CROSS_RULES.map((rule, index) => (
+              <div key={rule} className="flex gap-3">
+                <span className="mono text-[10px] text-primary border border-primary/30 w-6 h-6 flex items-center justify-center shrink-0">{index + 1}</span>
+                <p className="text-xs leading-relaxed text-muted-foreground">{rule}</p>
+              </div>
+            ))}
+          </div>
+        </aside>
+      </section>
+
+      <section className="grid lg:grid-cols-2 gap-4 mb-12">
+        <div className="bg-card border border-border p-6">
+          <div className="flex items-center gap-3 mb-5">
+            <Target size={20} className="text-primary" />
+            <div>
+              <p className="mono text-[10px] tracking-widest uppercase text-primary">Forex com IA</p>
+              <h2 className="playfair text-2xl font-bold">Fluxo de analise profissional</h2>
+            </div>
+          </div>
+          <div className="space-y-3">
+            {AI_FOREX_WORKFLOW.map((item) => (
+              <div key={item.title} className="border border-border bg-background/40 p-4">
+                <div className="flex items-center gap-3">
+                  <span className="mono text-xs text-primary border border-primary/30 w-7 h-7 flex items-center justify-center">{item.step}</span>
+                  <h3 className="text-sm font-medium">{item.title}</h3>
+                </div>
+                <p className="text-xs leading-relaxed text-muted-foreground mt-3">{item.prompt}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-card border border-border p-6">
+          <div className="flex items-center gap-3 mb-5">
+            <Zap size={20} className="text-primary" />
+            <div>
+              <p className="mono text-[10px] tracking-widest uppercase text-primary">Prompts premium</p>
+              <h2 className="playfair text-2xl font-bold">Copiar, adaptar e revisar</h2>
+            </div>
+          </div>
+          <div className="space-y-3">
+            {PREMIUM_AI_PROMPTS.map((prompt) => (
+              <div key={prompt} className="border-l-2 border-primary bg-background/40 px-4 py-3">
+                <p className="text-xs leading-relaxed text-muted-foreground">{prompt}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="grid lg:grid-cols-[1fr_360px] gap-4 mb-12">
+        <div>
+          <div className="mb-5">
+            <p className="mono text-[10px] tracking-widest uppercase text-primary">Protocolo de risco</p>
+            <h2 className="playfair text-2xl font-bold mt-1">Conteudo top sem promessa falsa</h2>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {RISK_PROTOCOL.map((item) => (
+              <article key={item.rule} className="bg-card border border-border p-5">
+                <p className="mono text-[10px] tracking-widest uppercase text-muted-foreground">{item.rule}</p>
+                <p className="mono text-2xl text-primary mt-2">{item.value}</p>
+                <p className="text-xs leading-relaxed text-muted-foreground mt-3">{item.detail}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+
+        <aside className="border border-amber-400/25 bg-amber-400/5 p-5 self-start">
+          <p className="mono text-[10px] tracking-widest uppercase text-amber-400">Nota de responsabilidade</p>
+          <p className="text-sm leading-relaxed text-muted-foreground mt-3">
+            Este conteudo e educacional. Forex, day trade e produtos alavancados podem gerar perdas rapidas. Nenhum bloco acima e recomendacao personalizada, promessa de rentabilidade ou ordem de compra/venda.
+          </p>
+          <div className="mt-5 space-y-2">
+            {PREMIUM_SOURCES.map((source) => (
+              <a key={source.url} href={source.url} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-3 text-xs text-muted-foreground hover:text-primary border border-border px-3 py-2">
+                <span>{source.label}</span>
+                <ArrowUpRight size={12} />
+              </a>
+            ))}
+          </div>
+        </aside>
+      </section>
     </main>
   );
 }
