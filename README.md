@@ -9,12 +9,15 @@ Plataforma React/Vite de noticias, Forex, IA e area premium por assinatura.
 - Conteudo gratuito de IA e chamadas para assinatura.
 - Login local para prototipo.
 - Planos Free, Pro e Premium.
+- Alternancia entre modo escuro e modo claro com preferencia salva no navegador.
 - Newsletter premium NexusFX Morning Brief.
 - Curso separado Investimentos do Zero.
+- Curso com modulos visiveis para demonstrar valor; compra libera pacote de apoio, certificado, comunidade e materiais baixaveis.
 - Checkout demo com cartao/PIX, validacao de campos, aceite de risco e recibo por produto.
-- Paginas separadas para Estudos, Newsletter, Curso, IA Nexus e Hub do assinante.
+- Paginas separadas para Estudos, Newsletter, Curso, IA Nexus, Terminal Premium e Hub do assinante.
 - IA de resumo de noticias para Pro/Premium.
 - IA avancada para estudos e operacoes simuladas exclusiva do Premium.
+- Terminal Premium com Forex, cripto, indices, commodities, acoes, biblioteca de indicadores, cenarios educativos de entrada e No-Trade Score.
 - Busca de noticias e painel de alertas no topo.
 
 ## Rodar localmente
@@ -33,10 +36,22 @@ npm run build
 ## Monetizacao
 
 - Free: R$ 0, com noticias, artigos, glossario e painel basico.
-- Pro: R$ 19,90/mes, com resumos premium, estudos, filtros, alertas, watchlist, simulador e quizzes.
-- Premium: R$ 39,90/mes, com comunidade, aulas, relatorios educativos, PDFs e IA avancada.
+- Pro: R$ 19,90/mes, com Morning Brief, resumo semanal, alertas, filtros, watchlist, simulador, quizzes e IA que resume noticias.
+- Premium: R$ 39,90/mes, com tudo do Pro mais Terminal NexusFX, Forex, cripto, ativos, todos os grupos de indicadores, cenarios educativos, No-Trade Score, comunidade, relatorios, PDFs e IA avancada.
 - Newsletter: R$ 9,90/mes, com Morning Brief diario.
 - Curso Investimentos do Zero: R$ 97, pagamento unico.
+
+## GitHub Pages
+
+O projeto esta configurado para publicar no GitHub Pages por GitHub Actions.
+
+URL esperada depois do deploy:
+
+```txt
+https://guilhermegalvaosilva.github.io/nexusfx/
+```
+
+O workflow usa `GITHUB_PAGES=true` para gerar o build com `base: /nexusfx/`.
 
 ## Fluxo de compra
 

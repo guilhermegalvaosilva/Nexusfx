@@ -15,10 +15,12 @@ import {
   LockKeyhole,
   LogOut,
   Menu,
+  Moon,
   Radar,
   RefreshCw,
   Search,
   ShieldCheck,
+  Sun,
   Target,
   TrendingDown,
   TrendingUp,
@@ -84,7 +86,8 @@ type Offer = {
   cta: string;
 };
 
-type AppView = "home" | "login" | "checkout" | "premium" | "plans" | "studies" | "newsletter" | "course" | "ai";
+type AppView = "home" | "login" | "checkout" | "premium" | "plans" | "studies" | "newsletter" | "course" | "ai" | "terminal";
+type ThemeMode = "dark" | "light";
 
 const FOREX_PAIRS = [
   { pair: "EUR/USD", value: 1.0892, change: 0.0014, pct: 0.13 },
@@ -263,10 +266,10 @@ const FOREX_STUDIES = [
 ];
 
 const PREMIUM_FOREX = [
-  "Mapa de suporte, resistencia, liquidez e contexto por par",
-  "Checklists de entrada, nao-entrada, stop e invalidacao",
-  "Estudo com calendario economico e risco por noticia",
-  "Diario de execucao para acompanhar processo e disciplina",
+  "Forex, cripto, indices, commodities, acoes brasileiras e globais",
+  "Indicadores de tendencia, momentum, volatilidade, volume, macro e risco",
+  "Cenarios educativos de entrada, nao-entrada, stop e invalidacao",
+  "IA Premium para estudar tese, calendario, risco e revisao pos-operacao",
 ];
 
 const AI_LESSONS = [
@@ -425,6 +428,130 @@ const RISK_PROTOCOL = [
   { rule: "Noticia forte", value: "Spread manda", detail: "Se spread, slippage ou volatilidade impedem stop limpo, o melhor trade pode ser nenhum." },
 ];
 
+const TERMINAL_STATS = [
+  { value: "56", label: "ativos no radar", detail: "Forex, cripto, indices, commodities, B3 e acoes globais." },
+  { value: "34", label: "indicadores", detail: "Tendencia, momentum, volatilidade, volume, macro e risco." },
+  { value: "5", label: "motores de IA", detail: "Resumo, tese, risco, no-trade e revisao pos-estudo." },
+  { value: "0", label: "sinais vendidos", detail: "Tudo e educacional, com gatilho e invalidacao, sem promessa." },
+];
+
+const ASSET_UNIVERSE = [
+  {
+    market: "Forex majors",
+    assets: ["EUR/USD", "GBP/USD", "USD/JPY", "USD/CHF", "AUD/USD", "NZD/USD"],
+    use: "Juros, DXY, inflacao, payroll, decisoes de bancos centrais e fluxo entre sessoes.",
+    signal: "Macro + volatilidade + liquidez Londres/Nova York",
+  },
+  {
+    market: "Forex emergentes",
+    assets: ["USD/BRL", "USD/MXN", "USD/ZAR", "EUR/BRL", "JPY/BRL"],
+    use: "Fiscal, commodities, risco pais, carry trade, fluxo estrangeiro e calendario local.",
+    signal: "Dolar global + risco Brasil + curva de juros",
+  },
+  {
+    market: "Criptos",
+    assets: ["BTC", "ETH", "SOL", "BNB", "XRP", "LINK", "AVAX", "MATIC"],
+    use: "Dominancia, funding, ETF flow, liquidez, rompimentos e eventos on-chain.",
+    signal: "Volatilidade + sentimento + zonas de liquidacao",
+  },
+  {
+    market: "Indices",
+    assets: ["S&P 500", "NASDAQ", "Dow Jones", "DAX", "Nikkei", "Ibovespa"],
+    use: "Apetite por risco, juros longos, tecnologia, China, bancos e fluxo institucional.",
+    signal: "Risk-on/risk-off + breadth + VIX",
+  },
+  {
+    market: "Commodities",
+    assets: ["Ouro", "Petroleo WTI", "Brent", "Cobre", "Prata", "Milho"],
+    use: "Dolar, juros reais, geopolitica, estoque, demanda chinesa e choque de oferta.",
+    signal: "Macro + geopolitica + estoque",
+  },
+  {
+    market: "Acoes e B3",
+    assets: ["PETR4", "VALE3", "ITUB4", "BBDC4", "AAPL", "MSFT", "NVDA", "TSLA"],
+    use: "Resultado, valuation, margem, noticia corporativa, setor, fluxo e cambio.",
+    signal: "Fundamento + noticia + tecnico",
+  },
+];
+
+const INDICATOR_SYSTEMS = [
+  {
+    group: "Tendencia",
+    indicators: ["SMA", "EMA", "ADX", "Ichimoku", "Supertrend", "Canal de Donchian"],
+    use: "Define direcao, regime e se o preco esta em tendencia ou range.",
+  },
+  {
+    group: "Momentum",
+    indicators: ["RSI", "MACD", "Estocastico", "CCI", "ROC", "Divergencia"],
+    use: "Mede forca, exaustao e perda de velocidade antes de rompimentos falsos.",
+  },
+  {
+    group: "Volatilidade",
+    indicators: ["ATR", "Bandas de Bollinger", "Keltner", "VIX", "Desvio padrao", "Range diario"],
+    use: "Ajuda a calibrar stop, tamanho, horario e expectativa realista de movimento.",
+  },
+  {
+    group: "Volume e liquidez",
+    indicators: ["VWAP", "OBV", "Volume Profile", "Delta", "Zonas de liquidez", "Order blocks"],
+    use: "Mostra onde pode haver defesa, absorcao, stop hunt ou falta de liquidez.",
+  },
+  {
+    group: "Macro e sentimento",
+    indicators: ["DXY", "Juros 2Y/10Y", "COT", "PMI", "CPI", "Payroll", "Fear & Greed"],
+    use: "Evita ler grafico isolado quando o regime macro domina o ativo.",
+  },
+  {
+    group: "Risco operacional",
+    indicators: ["R/R", "perda maxima", "drawdown", "slippage", "spread", "correlacao"],
+    use: "Transforma a ideia em plano controlado e mostra quando nao operar.",
+  },
+];
+
+const PREMIUM_ENTRY_SCENARIOS = [
+  {
+    asset: "EUR/USD",
+    score: "78/100",
+    context: "Dolar perde forca se juros longos cedem e PMI europeu vem acima do consenso.",
+    trigger: "Estudo de compra apenas com fechamento acima da resistencia e reteste com volume.",
+    invalidation: "Cenario cancelado se romper minima da sessao ou se DXY recuperar forca.",
+    noTrade: "Nao operar durante fala de banco central ou se spread abrir acima do normal.",
+    risk: "Risco educativo: perda maxima pequena, stop tecnico fora do ruido e sem alavancagem agressiva.",
+  },
+  {
+    asset: "BTC",
+    score: "71/100",
+    context: "Cripto reage a fluxo de ETF, dominancia do BTC, funding e apetite por risco em tecnologia.",
+    trigger: "Estudo de rompimento so depois de consolidar acima da zona de liquidez anterior.",
+    invalidation: "Perde validade se o preco voltar para dentro do range com volume vendedor.",
+    noTrade: "Nao operar se funding estiver extremo, volatilidade expandir sem direcao ou noticia regulatoria sair.",
+    risk: "Reduzir tamanho por volatilidade; alvo e stop devem respeitar ATR e liquidez.",
+  },
+  {
+    asset: "XAU/USD",
+    score: "74/100",
+    context: "Ouro combina juros reais, dolar, risco geopolitico e busca por protecao.",
+    trigger: "Estudo de entrada apenas se romper maxima com confirmacao e juros reais em queda.",
+    invalidation: "Cancela se yields subirem junto com DXY ou se candle devolver rompimento.",
+    noTrade: "Evitar antes de CPI, payroll ou decisao do Fed sem plano especifico de noticia.",
+    risk: "Stop precisa considerar ATR alto; melhor perder oportunidade do que entrar no ruido.",
+  },
+];
+
+const NEXUS_EDGE = [
+  {
+    title: "No-Trade Score",
+    detail: "A plataforma pontua quando o melhor estudo e nao entrar: noticia proxima, spread alto, volatilidade fora do regime, tese fraca ou risco grande demais.",
+  },
+  {
+    title: "Cenario em 3 camadas",
+    detail: "Cada ativo recebe contexto macro, leitura tecnica e protocolo de risco antes de qualquer hipotese de gatilho.",
+  },
+  {
+    title: "IA como copiloto de disciplina",
+    detail: "A IA nao promete acerto. Ela encontra incoerencia, pergunta o que invalida a tese e obriga o assinante a pensar antes do clique.",
+  },
+];
+
 const PREMIUM_SOURCES = [
   { label: "BIS FX Survey 2025", url: "https://www.bis.org/statistics/rpfx25.htm" },
   { label: "CFTC Forex Fraud Advisory", url: "https://www.cftc.gov/LearnAndProtect/AdvisoriesAndArticles/fraudadv_forex.html" },
@@ -446,15 +573,15 @@ const OFFERS: Record<OfferId, Offer> = {
     eyebrow: "Plano mensal",
     price: 19.9,
     recurrence: "/mes",
-    description: "Para acompanhar mercado com resumos, estudos e ferramentas educativas sem vender sinais.",
+    description: "Para estudar mercado todo dia com briefing, filtros, alertas e simuladores educativos.",
     features: [
-      "Resumo diario antes da abertura",
-      "Resumo semanal",
-      "Alertas de noticias importantes",
-      "Watchlist educativa",
-      "Estudos sobre ativos sem recomendacao direta",
+      "Morning Brief diario e resumo semanal",
+      "Alertas de noticias importantes e agenda economica",
+      "Filtros para encontrar o que estudar primeiro",
+      "Watchlist educativa por tema e ativo",
       "Simulador de carteira ficticia",
-      "Quiz e trilhas de estudo",
+      "Quiz, glossario e trilhas Pro",
+      "IA que resume todas as noticias",
     ],
     cta: "Assinar Pro",
   },
@@ -464,15 +591,15 @@ const OFFERS: Record<OfferId, Offer> = {
     eyebrow: "Plano mensal",
     price: 39.9,
     recurrence: "/mes",
-    description: "Para assinantes que querem comunidade, aulas, relatorios, PDFs e a IA avancada de estudo.",
+    description: "Para quem quer o terminal completo: Forex, cripto, ativos, indicadores, IA avancada e protocolo de risco.",
     features: [
       "Tudo do Pro",
-      "Comunidade privada",
-      "Aulas e relatorios educativos",
-      "Materiais PDF",
-      "IA avancada para estudos e operacoes simuladas",
-      "Revisao de teses com protocolo de risco",
-      "Biblioteca de prompts premium",
+      "Terminal Premium Forex, cripto, indices, commodities e acoes",
+      "Biblioteca de indicadores tecnicos, macro, fluxo e risco",
+      "Cenarios educativos de entrada com gatilho, invalidacao e no-trade",
+      "IA avancada para estudo operacional e revisao de tese",
+      "No-Trade Score para evitar entradas ruins",
+      "Comunidade, aulas, relatorios e materiais PDF",
     ],
     cta: "Assinar Premium",
   },
@@ -520,12 +647,16 @@ const PLAN_RANK: Record<UserPlan, number> = {
 
 const PLAN_COMPARISON = [
   { feature: "Noticias, artigos e glossario", free: true, pro: true, premium: true },
-  { feature: "Resumo diario e semanal", free: false, pro: true, premium: true },
+  { feature: "Painel Forex basico e estudos abertos", free: true, pro: true, premium: true },
+  { feature: "Morning Brief diario e resumo semanal", free: false, pro: true, premium: true },
   { feature: "Alertas, filtros e watchlist educativa", free: false, pro: true, premium: true },
-  { feature: "Simulador de carteira e quizzes", free: false, pro: true, premium: true },
-  { feature: "Comunidade, aulas e relatorios", free: false, pro: false, premium: true },
-  { feature: "Materiais PDF e biblioteca premium", free: false, pro: false, premium: true },
+  { feature: "Simulador de carteira, quizzes e trilhas Pro", free: false, pro: true, premium: true },
+  { feature: "IA que resume todas as noticias", free: false, pro: true, premium: true },
+  { feature: "Terminal Forex, cripto, indices, commodities e acoes", free: false, pro: false, premium: true },
+  { feature: "Todos os grupos de indicadores e biblioteca de setups", free: false, pro: false, premium: true },
+  { feature: "Cenarios educativos de entrada, invalidacao e no-trade", free: false, pro: false, premium: true },
   { feature: "IA avancada para estudo operacional", free: false, pro: false, premium: true },
+  { feature: "Comunidade, aulas, relatorios e materiais PDF", free: false, pro: false, premium: true },
 ];
 
 const COURSE_MODULES = [
@@ -673,6 +804,7 @@ const categoryHash = (cat: string) => `#/categoria/${cat.toLowerCase()}`;
 const SUBSCRIPTION_DAYS = 30;
 const USER_STORAGE_KEY = "nexusfx-user";
 const PENDING_OFFER_KEY = "nexusfx-pending-offer";
+const THEME_STORAGE_KEY = "nexusfx-theme";
 const DEFAULT_OFFER_ID: OfferId = "pro";
 
 const onlyDigits = (value: string) => value.replace(/\D/g, "");
@@ -794,7 +926,7 @@ async function fetchLiveNews() {
 function Ticker() {
   const items = [...FOREX_PAIRS, ...FOREX_PAIRS];
   return (
-    <div className="bg-[#060910] border-b border-border overflow-hidden">
+    <div className="ticker-strip bg-[#060910] border-b border-border overflow-hidden">
       <div className="flex items-center">
         <div className="shrink-0 bg-primary text-primary-foreground px-4 py-1.5 text-[10px] font-mono font-medium tracking-widest uppercase z-10">
           LIVE
@@ -872,17 +1004,35 @@ function ArticleCard({ article, onOpen }: { article: NewsArticle; onOpen: (artic
   );
 }
 
-function PremiumBox({ title, items, premium, onSubscribe, onAccess }: { title: string; items: string[]; premium: boolean; onSubscribe: () => void; onAccess: () => void }) {
+function PremiumBox({
+  title,
+  items,
+  premium,
+  onSubscribe,
+  onAccess,
+  price = "R$ 19,90",
+  planLabel = "Pro / mes",
+  eyebrow = "Planos pagos",
+}: {
+  title: string;
+  items: string[];
+  premium: boolean;
+  onSubscribe: () => void;
+  onAccess: () => void;
+  price?: string;
+  planLabel?: string;
+  eyebrow?: string;
+}) {
   return (
     <div className="border border-primary/30 bg-primary/5 p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="mono text-[10px] tracking-widest uppercase text-primary">Planos pagos</p>
+          <p className="mono text-[10px] tracking-widest uppercase text-primary">{eyebrow}</p>
           <h3 className="playfair text-xl font-bold mt-1">{title}</h3>
         </div>
         <div className="text-right shrink-0">
-          <p className="mono text-2xl font-bold text-primary">R$ 19,90</p>
-          <p className="mono text-[10px] text-muted-foreground">Pro / mes</p>
+          <p className="mono text-2xl font-bold text-primary">{price}</p>
+          <p className="mono text-[10px] text-muted-foreground">{planLabel}</p>
         </div>
       </div>
       <div className="mt-4 grid sm:grid-cols-2 gap-2">
@@ -1448,50 +1598,77 @@ function PlansPage({ user, onCheckout, onBack }: { user: UserAccount | null; onC
       </section>
 
       <section className="grid lg:grid-cols-3 gap-4 mb-6">
-        <article className="bg-card border border-border p-6">
-          <p className="mono text-[10px] tracking-widest uppercase text-muted-foreground">Free</p>
+        <article className="bg-card border border-border p-6 flex flex-col">
+          <p className="mono text-[10px] tracking-widest uppercase text-muted-foreground">Free - descobrir</p>
           <h2 className="playfair text-2xl font-bold mt-2">R$ 0</h2>
-          <p className="text-sm text-muted-foreground mt-3">Para conhecer o NexusFX e estudar o basico.</p>
+          <p className="text-sm text-muted-foreground mt-3">Para ler noticias, aprender termos e entender o basico sem pagar.</p>
           <div className="mt-5 space-y-2">
-            {FREE_FEATURES.slice(0, 3).map((feature) => (
+            {FREE_FEATURES.map((feature) => (
               <p key={feature} className="text-xs text-muted-foreground flex gap-2">
                 <CheckCircle2 size={13} className="text-emerald-400 shrink-0" />
                 {feature}
               </p>
             ))}
           </div>
-          <p className="mono text-[10px] tracking-widest uppercase text-muted-foreground mt-6">Atual</p>
+          <div className="mt-auto pt-5">
+            <p className="mono text-[10px] tracking-widest uppercase text-muted-foreground">Nao inclui</p>
+            <p className="text-xs text-muted-foreground mt-2">IA completa, alertas, simulador, terminal premium e comunidade.</p>
+          </div>
         </article>
 
-        {(["pro", "premium"] as OfferId[]).map((offerId) => {
-          const offer = OFFERS[offerId];
-          const active = offerId === currentPlan || (offerId === "pro" && currentPlan === "premium");
-          const highlights = offer.id === "pro"
-            ? ["Resumos premium", "Alertas e filtros", "Simulador e quizzes"]
-            : ["Tudo do Pro", "IA avancada", "Aulas, PDFs e comunidade"];
-          return (
-            <article key={offer.id} className={`border p-6 ${offer.id === "premium" ? "border-primary/40 bg-primary/5" : "border-border bg-card"}`}>
-              <p className="mono text-[10px] tracking-widest uppercase text-primary">{offer.eyebrow}</p>
-              <h2 className="playfair text-2xl font-bold mt-2">{offer.title}</h2>
-              <p className="mono text-3xl text-primary mt-4">
-                {offer.price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                <span className="text-xs text-muted-foreground"> {offer.recurrence}</span>
+        <article className="bg-card border border-sky-400/25 p-6 flex flex-col">
+          <p className="mono text-[10px] tracking-widest uppercase text-sky-400">Pro - acompanhar e estudar</p>
+          <h2 className="playfair text-2xl font-bold mt-2">{OFFERS.pro.title}</h2>
+          <p className="mono text-3xl text-primary mt-4">
+            {OFFERS.pro.price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+            <span className="text-xs text-muted-foreground"> {OFFERS.pro.recurrence}</span>
+          </p>
+          <p className="text-sm text-muted-foreground mt-3">{OFFERS.pro.description}</p>
+          <div className="mt-5 space-y-2">
+            {["Morning Brief diario", "Alertas e filtros", "Watchlist educativa", "Simulador e quizzes", "IA resumindo noticias"].map((feature) => (
+              <p key={feature} className="text-xs text-muted-foreground flex gap-2">
+                <CheckCircle2 size={13} className="text-sky-400 shrink-0" />
+                {feature}
               </p>
-              <p className="text-sm text-muted-foreground mt-3">{offer.description}</p>
-              <button disabled={active} onClick={() => onCheckout(offer.id)} className="mt-5 w-full bg-primary text-primary-foreground px-4 py-2 mono text-sm hover:bg-primary/90 disabled:opacity-50">
-                {active ? "Plano ativo" : offer.cta}
-              </button>
-              <div className="mt-5 space-y-2">
-                {highlights.map((feature) => (
-                  <p key={feature} className="text-xs text-muted-foreground flex gap-2">
-                    <CheckCircle2 size={13} className="text-emerald-400 shrink-0" />
-                    {feature}
-                  </p>
-                ))}
-              </div>
-            </article>
-          );
-        })}
+            ))}
+          </div>
+          <div className="mt-auto pt-5">
+            <p className="mono text-[10px] tracking-widest uppercase text-muted-foreground">Nao inclui</p>
+            <p className="text-xs text-muted-foreground mt-2">Terminal de entrada, IA operacional Premium, comunidade, relatorios e PDFs premium.</p>
+            <button disabled={currentPlan === "pro" || currentPlan === "premium"} onClick={() => onCheckout("pro")} className="mt-4 w-full bg-primary text-primary-foreground px-4 py-2 mono text-sm hover:bg-primary/90 disabled:opacity-50">
+              {currentPlan === "pro" || currentPlan === "premium" ? "Plano ativo" : OFFERS.pro.cta}
+            </button>
+          </div>
+        </article>
+
+        <article className="border border-primary/40 bg-primary/5 p-6 flex flex-col relative overflow-hidden">
+          <div className="absolute right-4 top-4 mono text-[9px] tracking-widest uppercase text-primary border border-primary/30 px-2 py-1">Top</div>
+          <p className="mono text-[10px] tracking-widest uppercase text-primary">Premium - terminal de mercado</p>
+          <h2 className="playfair text-2xl font-bold mt-2">{OFFERS.premium.title}</h2>
+          <p className="mono text-3xl text-primary mt-4">
+            {OFFERS.premium.price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+            <span className="text-xs text-muted-foreground"> {OFFERS.premium.recurrence}</span>
+          </p>
+          <p className="text-sm text-muted-foreground mt-3">{OFFERS.premium.description}</p>
+          <div className="mt-5 space-y-2">
+            {[
+              "Tudo do Pro",
+              "Terminal Forex, cripto, indices, commodities e acoes",
+              "Todos os grupos de indicadores",
+              "Cenarios educativos de entrada e no-trade",
+              "IA avancada para tese, risco e revisao",
+              "Comunidade, relatorios e PDFs",
+            ].map((feature) => (
+              <p key={feature} className="text-xs text-muted-foreground flex gap-2">
+                <CheckCircle2 size={13} className="text-emerald-400 shrink-0" />
+                {feature}
+              </p>
+            ))}
+          </div>
+          <button disabled={currentPlan === "premium"} onClick={() => onCheckout("premium")} className="mt-auto w-full bg-primary text-primary-foreground px-4 py-2 mono text-sm hover:bg-primary/90 disabled:opacity-50">
+            {currentPlan === "premium" ? "Plano ativo" : OFFERS.premium.cta}
+          </button>
+        </article>
       </section>
 
       <section className="bg-card border border-border mb-6 overflow-x-auto">
@@ -1574,11 +1751,12 @@ function PremiumArea({
     );
   }
 
-  const pages = [
+  const pages: Array<{ title: string; detail: string; view: AppView; locked: boolean; offerId?: OfferId }> = [
     { title: "Estudos", detail: "Trilhas, glossario, quizzes e simulador de carteira ficticia.", view: "studies" as AppView, locked: false },
     { title: "Newsletter", detail: "Morning Brief com noticias, impacto, termos e agenda.", view: "newsletter" as AppView, locked: false },
-    { title: "Curso", detail: "Investimentos do Zero, aulas, PDFs e exercicios.", view: "course" as AppView, locked: !hasCourseAccess(user) },
+    { title: "Curso", detail: "Investimentos do Zero com todos os modulos abertos para estudo.", view: "course" as AppView, locked: false },
     { title: "IA Nexus", detail: "Resumo de noticias e IA avancada para estudo e operacoes simuladas.", view: "ai" as AppView, locked: false },
+    { title: "Terminal Premium", detail: "Forex, cripto, ativos, indicadores, cenarios e IA operacional.", view: "terminal" as AppView, locked: !hasPlanAccess(user, "premium"), offerId: "premium" as OfferId },
   ];
 
   return (
@@ -1599,13 +1777,13 @@ function PremiumArea({
         </div>
       </section>
 
-      <section className="grid md:grid-cols-2 xl:grid-cols-4 gap-4">
+      <section className="grid md:grid-cols-2 xl:grid-cols-5 gap-4">
         {pages.map((page) => (
           <article key={page.title} className="bg-card border border-border p-5">
             <h2 className="playfair text-xl font-bold">{page.title}</h2>
             <p className="text-sm text-muted-foreground leading-relaxed mt-2">{page.detail}</p>
             {page.locked ? (
-              <button onClick={() => onCheckout("course")} className="mt-5 w-full border border-primary/40 text-primary px-4 py-2 mono text-sm hover:bg-primary/10">Comprar curso</button>
+              <button onClick={() => onCheckout(page.offerId ?? "premium")} className="mt-5 w-full border border-primary/40 text-primary px-4 py-2 mono text-sm hover:bg-primary/10">Assinar Premium</button>
             ) : (
               <button onClick={() => onOpenPage(page.view)} className="mt-5 w-full bg-primary text-primary-foreground px-4 py-2 mono text-sm hover:bg-primary/90">Abrir pagina</button>
             )}
@@ -1736,7 +1914,7 @@ function CoursePage({ user, onCheckout, onBack }: { user: UserAccount | null; on
       <section className="mb-8">
         <p className="mono text-[10px] tracking-widest uppercase text-primary">Curso dentro da plataforma</p>
         <h1 className="playfair text-4xl font-bold mt-2">Investimentos do Zero - Metodo NexusFX</h1>
-        <p className="text-sm text-muted-foreground leading-relaxed mt-3 max-w-3xl">Curso separado para transformar visitantes em alunos: aulas, PDFs, exercicios e quizzes.</p>
+        <p className="text-sm text-muted-foreground leading-relaxed mt-3 max-w-3xl">Curso aberto para o usuario enxergar valor de verdade. A compra libera pacote de apoio, certificado, comunidade e materiais baixaveis.</p>
       </section>
       <section className="grid lg:grid-cols-[1fr_340px] gap-4 mb-4">
         <div className="bg-card border border-border p-6">
@@ -1771,16 +1949,15 @@ function CoursePage({ user, onCheckout, onBack }: { user: UserAccount | null; on
       <section className="grid lg:grid-cols-[1fr_340px] gap-4">
         <div className="space-y-3">
           {COURSE_MODULES.map((module, index) => {
-            const unlocked = access || index < 2;
             return (
-              <article key={module.title} className={`border p-5 ${unlocked ? "border-border bg-card" : "border-border bg-card opacity-70"}`}>
+              <article key={module.title} className="border border-border bg-card p-5">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                   <div>
                     <p className="mono text-[10px] tracking-widest uppercase text-primary">Modulo {index + 1}</p>
                     <h2 className="playfair text-xl font-bold mt-2">{module.title}</h2>
                     <p className="text-xs text-muted-foreground leading-relaxed mt-3">{module.detail}</p>
                   </div>
-                  {!unlocked && <span className="mono text-[10px] tracking-widest uppercase text-amber-400 border border-amber-400/30 px-2 py-1 self-start">Bloqueado</span>}
+                  <span className="mono text-[10px] tracking-widest uppercase text-emerald-400 border border-emerald-400/30 px-2 py-1 self-start">Aberto</span>
                 </div>
                 <div className="grid md:grid-cols-3 gap-3 mt-4">
                   {module.lessons.map((lesson) => (
@@ -1793,15 +1970,15 @@ function CoursePage({ user, onCheckout, onBack }: { user: UserAccount | null; on
                 <div className="grid md:grid-cols-3 gap-3 mt-3">
                   <div className="border border-border bg-background/40 p-3">
                     <p className="mono text-[9px] tracking-widest uppercase text-primary">PDF</p>
-                    <p className="text-xs text-muted-foreground mt-1">{unlocked ? module.pdf : "Material liberado apos compra"}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{module.pdf}</p>
                   </div>
                   <div className="border border-border bg-background/40 p-3">
                     <p className="mono text-[9px] tracking-widest uppercase text-primary">Exercicio</p>
-                    <p className="text-xs text-muted-foreground mt-1">{unlocked ? module.exercise : "Exercicio bloqueado"}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{module.exercise}</p>
                   </div>
                   <div className="border border-border bg-background/40 p-3">
                     <p className="mono text-[9px] tracking-widest uppercase text-primary">Quiz</p>
-                    <p className="text-xs text-muted-foreground mt-1">{unlocked ? module.quiz : "Quiz bloqueado"}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{module.quiz}</p>
                   </div>
                 </div>
               </article>
@@ -1812,10 +1989,10 @@ function CoursePage({ user, onCheckout, onBack }: { user: UserAccount | null; on
           {access ? (
             <div className="border border-emerald-400/25 bg-emerald-400/5 p-5">
               <p className="mono text-[10px] tracking-widest uppercase text-emerald-400">Curso liberado</p>
-              <p className="text-sm text-muted-foreground leading-relaxed mt-3">Aulas, PDFs, exercicios e quizzes estao disponiveis nesta conta.</p>
+              <p className="text-sm text-muted-foreground leading-relaxed mt-3">Pacote comprado: materiais baixaveis, certificado e comunidade do curso ficam vinculados a esta conta.</p>
             </div>
           ) : (
-            <LockedPanel title="Comprar o curso completo" detail="Acesso unico por R$ 97. Inclui 8 modulos, 24 aulas, PDFs, exercicios e quizzes." offerId="course" onCheckout={onCheckout} />
+            <LockedPanel title="Comprar pacote do curso" detail="Os modulos estao abertos. A compra unica de R$ 97 libera materiais baixaveis, certificado, comunidade e futuras aulas extras." offerId="course" onCheckout={onCheckout} />
           )}
         </aside>
       </section>
@@ -1911,6 +2088,198 @@ function AiLabPage({ user, articles, selectedPair, onCheckout, onBack }: { user:
   );
 }
 
+function MarketTerminalPage({ user, onCheckout, onBack }: { user: UserAccount | null; onCheckout: (offerId: OfferId) => void; onBack: () => void }) {
+  const premium = hasPlanAccess(user, "premium");
+  const [selectedScenario, setSelectedScenario] = useState(PREMIUM_ENTRY_SCENARIOS[0]);
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState("");
+
+  const runTerminalAi = (event: FormEvent) => {
+    event.preventDefault();
+    if (!premium || !question.trim()) return;
+    setAnswer(
+      `IA Terminal NexusFX: transforme "${question.trim()}" em estudo, nao em ordem. Primeiro valide regime macro, horario, liquidez, spread e noticia. Depois escreva gatilho, invalidacao, no-trade e perda maxima. Se qualquer ponto ficar confuso, o No-Trade Score deve vencer a vontade de entrar.`,
+    );
+  };
+
+  const visibleScenarios = premium ? PREMIUM_ENTRY_SCENARIOS : PREMIUM_ENTRY_SCENARIOS.slice(0, 1);
+
+  return (
+    <main className="max-w-7xl mx-auto px-4 lg:px-8 py-10">
+      <button onClick={onBack} className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+        <ArrowLeft size={16} />
+        Voltar
+      </button>
+
+      <section className="border border-primary/30 bg-primary/5 p-6 lg:p-8 mb-6">
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5">
+          <div>
+            <p className="mono text-[10px] tracking-widest uppercase text-primary">Exclusivo Premium</p>
+            <h1 className="playfair text-4xl lg:text-5xl font-bold mt-2">Terminal NexusFX</h1>
+            <p className="text-sm text-muted-foreground leading-relaxed mt-3 max-w-3xl">
+              Uma area top para Forex, cripto, indices, commodities e acoes: ativos, indicadores, estudos, IA, cenarios educativos de entrada e um sistema que tambem mostra quando nao operar.
+            </p>
+          </div>
+          <button onClick={() => (premium ? setQuestion("Quero estudar EUR/USD, BTC e ouro para as proximas 24h.") : onCheckout("premium"))} className="bg-primary text-primary-foreground px-4 py-2 mono text-sm hover:bg-primary/90">
+            {premium ? "Gerar estudo com IA" : "Assinar Premium"}
+          </button>
+        </div>
+      </section>
+
+      <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        {TERMINAL_STATS.map((item) => (
+          <article key={item.label} className="bg-card border border-border p-4">
+            <p className="mono text-3xl text-primary">{item.value}</p>
+            <p className="mono text-[10px] tracking-widest uppercase text-muted-foreground mt-1">{item.label}</p>
+            <p className="text-xs text-muted-foreground leading-relaxed mt-3">{item.detail}</p>
+          </article>
+        ))}
+      </section>
+
+      {!premium && (
+        <section className="mb-6">
+          <LockedPanel title="Terminal completo bloqueado" detail="O Pro resume noticias. O Premium libera o terminal com Forex, cripto, ativos, todos os indicadores, cenarios educativos de entrada, No-Trade Score e IA operacional." offerId="premium" onCheckout={onCheckout} />
+        </section>
+      )}
+
+      <section className="grid lg:grid-cols-[1fr_360px] gap-4 mb-8">
+        <div className="bg-card border border-border p-6">
+          <div className="flex items-center gap-3 mb-5">
+            <Radar size={20} className="text-primary" />
+            <div>
+              <p className="mono text-[10px] tracking-widest uppercase text-primary">Universo de ativos</p>
+              <h2 className="playfair text-2xl font-bold">Forex, cripto, indices, commodities e acoes</h2>
+            </div>
+          </div>
+          <div className="grid md:grid-cols-2 gap-3">
+            {ASSET_UNIVERSE.map((group) => (
+              <article key={group.market} className="border border-border bg-background/40 p-4">
+                <p className="mono text-[10px] tracking-widest uppercase text-primary">{group.market}</p>
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  {group.assets.map((asset) => (
+                    <span key={asset} className="mono text-[10px] border border-border text-muted-foreground px-2 py-1">{asset}</span>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed mt-3">{group.use}</p>
+                <p className="mono text-[10px] tracking-widest uppercase text-emerald-400 mt-3">{group.signal}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+
+        <aside className="bg-card border border-border p-6 self-start">
+          <div className="flex items-center gap-2">
+            <Brain size={19} className="text-primary" />
+            <h2 className="playfair text-2xl font-bold">IA operacional</h2>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed mt-3">
+            Exclusiva do Premium. Ela organiza estudo, tese, risco, calendario, invalidacao e revisao. Nao executa ordens e nao promete rentabilidade.
+          </p>
+          {premium ? (
+            <form onSubmit={runTerminalAi} className="mt-5">
+              <textarea
+                value={question}
+                onChange={(event) => setQuestion(event.target.value)}
+                className="w-full min-h-36 bg-background border border-border px-3 py-2 outline-none focus:border-primary text-sm"
+                placeholder="Ex: Monte um estudo educativo para EUR/USD, BTC e ouro antes da abertura de Nova York."
+              />
+              <button className="mt-3 w-full bg-primary text-primary-foreground px-4 py-2 mono text-sm hover:bg-primary/90">Analisar com IA Premium</button>
+              {answer && <div className="mt-4 border border-primary/30 bg-primary/5 p-4 text-sm text-muted-foreground leading-relaxed">{answer}</div>}
+            </form>
+          ) : (
+            <div className="mt-5 border border-border bg-background/40 p-4">
+              <p className="mono text-[10px] tracking-widest uppercase text-primary">Preview</p>
+              <p className="text-xs text-muted-foreground leading-relaxed mt-2">Assine Premium para perguntar sobre ativos, risco, calendario, setups educativos e revisao de tese.</p>
+            </div>
+          )}
+        </aside>
+      </section>
+
+      <section className="mb-8">
+        <div className="flex items-center gap-3 mb-5">
+          <BarChart2 size={20} className="text-primary" />
+          <div>
+            <p className="mono text-[10px] tracking-widest uppercase text-primary">Biblioteca de indicadores</p>
+            <h2 className="playfair text-2xl font-bold">Todos os tipos que importam no estudo</h2>
+          </div>
+        </div>
+        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-3">
+          {INDICATOR_SYSTEMS.map((system) => (
+            <article key={system.group} className="bg-card border border-border p-5">
+              <p className="mono text-[10px] tracking-widest uppercase text-primary">{system.group}</p>
+              <div className="flex flex-wrap gap-1.5 mt-3">
+                {system.indicators.map((indicator) => (
+                  <span key={indicator} className="mono text-[10px] border border-border bg-background/40 text-muted-foreground px-2 py-1">{indicator}</span>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed mt-4">{system.use}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="grid lg:grid-cols-[360px_1fr] gap-4 mb-8">
+        <aside className="bg-card border border-border p-5 self-start">
+          <div className="flex items-center gap-2 mb-4">
+            <Target size={18} className="text-primary" />
+            <h2 className="playfair text-xl font-bold">Cenarios educativos</h2>
+          </div>
+          <div className="space-y-2">
+            {visibleScenarios.map((scenario) => (
+              <button
+                key={scenario.asset}
+                onClick={() => setSelectedScenario(scenario)}
+                className={`w-full text-left border px-4 py-3 hover:border-primary/40 ${selectedScenario.asset === scenario.asset ? "border-primary/40 bg-primary/5" : "border-border bg-background/40"}`}
+              >
+                <p className="mono text-[10px] tracking-widest uppercase text-primary">{scenario.asset}</p>
+                <p className="text-xs text-muted-foreground mt-1">Nexus Score {scenario.score}</p>
+              </button>
+            ))}
+          </div>
+          {!premium && <p className="text-xs text-muted-foreground leading-relaxed mt-4">Premium libera todos os cenarios, comparacao entre ativos e IA para revisar sua propria tese.</p>}
+        </aside>
+
+        <div className="bg-card border border-border p-6">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+            <div>
+              <p className="mono text-[10px] tracking-widest uppercase text-primary">Previsao educativa de entrada</p>
+              <h2 className="playfair text-3xl font-bold mt-1">{selectedScenario.asset}</h2>
+            </div>
+            <span className="mono text-sm text-emerald-400 border border-emerald-400/30 px-3 py-1">Nexus Score {selectedScenario.score}</span>
+          </div>
+          <div className="grid md:grid-cols-2 gap-3 mt-5">
+            {[
+              ["Contexto", selectedScenario.context],
+              ["Gatilho educativo", selectedScenario.trigger],
+              ["Invalidacao", selectedScenario.invalidation],
+              ["No-trade", selectedScenario.noTrade],
+              ["Risco", selectedScenario.risk],
+              ["Aviso", "Nao e recomendacao de compra ou venda. Use como roteiro de estudo, simulado e disciplina de risco."],
+            ].map(([label, text]) => (
+              <div key={label} className="border border-border bg-background/40 p-4">
+                <p className="mono text-[10px] tracking-widest uppercase text-primary">{label}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed mt-2">{text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="grid md:grid-cols-3 gap-3">
+        {NEXUS_EDGE.map((item) => (
+          <article key={item.title} className="border border-primary/25 bg-primary/5 p-5">
+            <div className="flex items-center gap-2">
+              <ShieldCheck size={18} className="text-primary" />
+              <h3 className="playfair text-xl font-bold">{item.title}</h3>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed mt-3">{item.detail}</p>
+          </article>
+        ))}
+      </section>
+    </main>
+  );
+}
+
 function ArticlePage({ article, related, onBack, onOpen }: { article: NewsArticle; related: NewsArticle[]; onBack: () => void; onOpen: (article: NewsArticle) => void }) {
   return (
     <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8">
@@ -1996,6 +2365,13 @@ export default function App() {
   const [view, setView] = useState<AppView>("home");
   const [checkoutOfferId, setCheckoutOfferId] = useState<OfferId>(DEFAULT_OFFER_ID);
   const [navOpen, setNavOpen] = useState(false);
+  const [theme, setTheme] = useState<ThemeMode>(() => {
+    try {
+      return localStorage.getItem(THEME_STORAGE_KEY) === "light" ? "light" : "dark";
+    } catch {
+      return "dark";
+    }
+  });
   const [time, setTime] = useState(new Date());
   const [selectedPair, setSelectedPair] = useState(FOREX_PAIRS[0]);
   const [liveNews, setLiveNews] = useState<NewsArticle[]>([]);
@@ -2057,6 +2433,16 @@ export default function App() {
   );
 
   useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, theme);
+    } catch {
+      // Theme persistence is optional in restricted browser modes.
+    }
+  }, [theme]);
+
+  useEffect(() => {
     const syncFromHash = () => {
       const hash = window.location.hash;
       const newsMatch = hash.match(/^#\/noticia\/(.+)$/);
@@ -2095,6 +2481,12 @@ export default function App() {
 
       if (hash === "#/ai" || hash === "#/ia") {
         setView("ai");
+        setSelectedArticle(null);
+        return;
+      }
+
+      if (hash === "#/terminal") {
+        setView("terminal");
         setSelectedArticle(null);
         return;
       }
@@ -2220,6 +2612,7 @@ export default function App() {
       newsletter: "#/newsletter",
       course: "#/curso",
       ai: "#/ia",
+      terminal: "#/terminal",
     };
     window.location.hash = hashes[nextView];
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -2309,16 +2702,20 @@ export default function App() {
         .line-clamp-2, .line-clamp-3 { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
         .line-clamp-2 { -webkit-line-clamp: 2; }
         .line-clamp-3 { -webkit-line-clamp: 3; }
+        [data-theme="light"] .ticker-strip,
+        [data-theme="light"] .market-strip,
+        [data-theme="light"] .site-footer { background: #eef3f8; }
+        [data-theme="light"] .hero-fade { background: linear-gradient(to top, rgba(9, 12, 20, 0.86), rgba(9, 12, 20, 0.46), transparent); }
       `}</style>
 
       <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border">
         <div className="max-w-7xl mx-auto px-4 lg:px-8">
           <div className="flex items-center justify-between h-14">
-            <button onClick={openHome} className="flex items-center gap-2">
+            <button onClick={openHome} className="flex items-center gap-2 shrink-0 mr-4">
               <div className="w-2 h-2 bg-primary rounded-full" />
               <span className="playfair text-xl font-bold tracking-tight">NEXUS<span className="text-primary">FX</span></span>
             </button>
-            <div className="hidden lg:flex items-center gap-4 xl:gap-6">
+            <div className="hidden lg:flex items-center gap-3 xl:gap-4">
               {CATS.filter((cat) => cat !== "TODOS").map((cat) => (
                 <button key={cat} onClick={() => openCategory(cat)} className="text-[12px] xl:text-[13px] text-muted-foreground hover:text-foreground whitespace-nowrap">
                   {CAT_LABELS[cat]}
@@ -2328,9 +2725,18 @@ export default function App() {
               <button onClick={() => openPage("newsletter")} className="text-[12px] xl:text-[13px] text-muted-foreground hover:text-foreground whitespace-nowrap">Newsletter</button>
               <button onClick={() => openPage("course")} className="text-[12px] xl:text-[13px] text-muted-foreground hover:text-foreground whitespace-nowrap">Curso</button>
               <button onClick={() => openPage("ai")} className="text-[12px] xl:text-[13px] text-muted-foreground hover:text-foreground whitespace-nowrap">IA Nexus</button>
+              <button onClick={() => openPage("terminal")} className="text-[12px] xl:text-[13px] text-primary hover:text-foreground whitespace-nowrap">Terminal</button>
             </div>
             <div className="flex items-center gap-3">
               <span className="mono text-[11px] text-muted-foreground hidden md:block">{time.toLocaleTimeString("pt-BR")} BRT</span>
+              <button
+                onClick={() => setTheme((value) => (value === "dark" ? "light" : "dark"))}
+                className="inline-flex w-8 h-8 items-center justify-center border border-border text-muted-foreground hover:text-foreground hover:border-primary/40"
+                aria-label={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}
+                title={theme === "dark" ? "Modo claro" : "Modo escuro"}
+              >
+                {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
+              </button>
               <button onClick={openPremium} className="hidden sm:inline-flex items-center gap-1.5 text-[11px] mono border border-primary/30 text-primary px-3 py-1.5 hover:bg-primary/10">
                 {hasPaidPlan ? <CheckCircle2 size={12} /> : <LockKeyhole size={12} />}
                 {hasPaidPlan ? currentPlan.toUpperCase() : "Planos"}
@@ -2384,6 +2790,7 @@ export default function App() {
             <button onClick={() => { openPage("newsletter"); setNavOpen(false); }} className="text-left text-sm text-muted-foreground py-1">Newsletter</button>
             <button onClick={() => { openPage("course"); setNavOpen(false); }} className="text-left text-sm text-muted-foreground py-1">Curso</button>
             <button onClick={() => { openPage("ai"); setNavOpen(false); }} className="text-left text-sm text-muted-foreground py-1">IA Nexus</button>
+            <button onClick={() => { openPage("terminal"); setNavOpen(false); }} className="text-left text-sm text-primary py-1">Terminal Premium</button>
             <button onClick={() => { openPage(hasPaidPlan ? "premium" : "plans"); setNavOpen(false); }} className="text-left text-sm text-primary py-1">{hasPaidPlan ? "Hub do assinante" : "Planos"}</button>
             <button onClick={() => { user ? logout() : openLogin(); setNavOpen(false); }} className="text-left text-sm text-muted-foreground py-1">
               {user ? "Sair" : "Entrar"}
@@ -2445,7 +2852,7 @@ export default function App() {
 
       <Ticker />
 
-      <div className="bg-[#0b0f1a] border-b border-border overflow-x-auto">
+      <div className="market-strip bg-[#0b0f1a] border-b border-border overflow-x-auto">
         <div className="flex items-stretch px-4 lg:px-8 max-w-7xl mx-auto">
           {INDICES.map((idx) => (
             <div key={idx.name} className="flex items-center gap-3 px-5 py-2.5 border-r border-border/50 shrink-0 first:pl-0">
@@ -2485,6 +2892,8 @@ export default function App() {
         <CoursePage user={user} onCheckout={openCheckout} onBack={openHome} />
       ) : view === "ai" ? (
         <AiLabPage user={user} articles={allNews} selectedPair={selectedPair} onCheckout={openCheckout} onBack={openHome} />
+      ) : view === "terminal" ? (
+        <MarketTerminalPage user={user} onCheckout={openCheckout} onBack={openHome} />
       ) : selectedArticle ? (
         <ArticlePage article={selectedArticle} related={related.length ? related : allNews} onBack={openHome} onOpen={openArticle} />
       ) : (
@@ -2508,7 +2917,7 @@ export default function App() {
             <button onClick={() => openArticle(featured)} className="text-left group relative overflow-hidden bg-card">
               <div className="relative h-[360px] sm:h-[420px] lg:h-[520px]">
                 <img src={featured.image} alt={featured.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#090c14] via-[#090c14]/60 to-transparent" />
+                <div className="hero-fade absolute inset-0 bg-gradient-to-t from-[#090c14] via-[#090c14]/60 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-8">
                   <div className="flex items-center gap-3 mb-4">
                     {featured.live && <span className="mono text-[9px] tracking-widest uppercase text-primary border border-primary/40 px-2 py-0.5">AO VIVO</span>}
@@ -2642,7 +3051,16 @@ export default function App() {
             </div>
 
             <div className="mt-4">
-              <PremiumBox title="Desbloqueie o estudo Forex completo" items={PREMIUM_FOREX} premium={hasPaidPlan} onSubscribe={() => openPage("plans")} onAccess={openPremium} />
+              <PremiumBox
+                title="Conheca o Terminal Premium"
+                items={PREMIUM_FOREX}
+                premium={hasPlanAccess(user, "premium")}
+                onSubscribe={() => openCheckout("premium")}
+                onAccess={() => openPage("terminal")}
+                price="R$ 39,90"
+                planLabel="Premium / mes"
+                eyebrow="Plano top"
+              />
             </div>
           </section>
 
@@ -2713,7 +3131,7 @@ export default function App() {
         </main>
       )}
 
-      <footer className="border-t border-border bg-[#060910]">
+      <footer className="site-footer border-t border-border bg-[#060910]">
         <div className="max-w-7xl mx-auto px-4 lg:px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="mono text-[10px] text-muted-foreground">© 2026 NexusFX. Conteúdo informativo. Não constitui recomendação de investimento.</p>
           <div className="flex items-center gap-1.5 text-muted-foreground">
