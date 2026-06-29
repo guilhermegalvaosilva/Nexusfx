@@ -754,6 +754,89 @@ const COURSE_MODULES = [
   },
 ];
 
+const COURSE_DETAILS: Record<string, { lessonContent: string[]; pdfUrl: string; workbook: string[]; quizAnswer: string }> = {
+  "Organizacao financeira": {
+    lessonContent: [
+      "Liste toda renda liquida, gastos fixos, gastos variaveis, dividas e saldo que sobra. O aluno precisa enxergar o dinheiro antes de pensar em produto financeiro.",
+      "Separe a reserva de emergencia em um produto simples, liquido e de baixo risco. A reserva protege contra vender investimento ruim na hora errada.",
+      "Transforme objetivos em prazo e valor: curto prazo pede seguranca, medio prazo pede equilibrio e longo prazo aceita mais oscilacao.",
+    ],
+    pdfUrl: "/course/modulo-1-organizacao-financeira.pdf",
+    workbook: ["Preencher renda mensal liquida", "Classificar gastos em fixos, variaveis e dividas", "Definir meta de reserva em meses de custo de vida"],
+    quizAnswer: "Montar reserva de emergencia e controle de gastos antes de buscar rentabilidade.",
+  },
+  "Renda fixa": {
+    lessonContent: [
+      "Renda fixa nao significa rendimento fixo em todo momento. O combinado pode depender de CDI, Selic, IPCA, taxa prefixada e prazo.",
+      "Liquidez importa tanto quanto taxa. Dinheiro de emergencia precisa estar disponivel rapidamente, sem depender de venda em mercado secundario.",
+      "Credito, prazo e marcacao a mercado mudam o risco. Um titulo pode oscilar antes do vencimento mesmo tendo regra clara de pagamento.",
+    ],
+    pdfUrl: "/course/modulo-2-renda-fixa.pdf",
+    workbook: ["Comparar liquidez diaria e vencimento", "Identificar indexador do produto", "Anotar risco de credito, FGC e prazo"],
+    quizAnswer: "Porque a taxa de mercado muda e o preco do titulo se ajusta antes do vencimento.",
+  },
+  "Inflacao, Selic e CDI": {
+    lessonContent: [
+      "Inflacao mede perda de poder de compra. Se o dinheiro rende menos que a inflacao, o patrimonio cresce no numero, mas compra menos.",
+      "Selic alta aumenta o custo de oportunidade: investidores exigem mais retorno para aceitar risco em bolsa, FIIs e ativos longos.",
+      "CDI e uma referencia usada em muitos produtos. Entender percentual do CDI ajuda a comparar alternativas parecidas.",
+    ],
+    pdfUrl: "/course/modulo-3-inflacao-selic-cdi.pdf",
+    workbook: ["Anotar inflacao recente", "Comparar rendimento nominal e real", "Explicar efeito da Selic sobre renda fixa, bolsa e dolar"],
+    quizAnswer: "Ativos de risco tendem a sofrer porque a renda fixa fica mais competitiva e o credito encarece.",
+  },
+  "Acoes": {
+    lessonContent: [
+      "Acao e participacao em empresa, nao bilhete de aposta. O estudo comeca pelo negocio: como vende, para quem vende e de onde vem lucro.",
+      "Indicadores ajudam, mas nao decidem sozinhos. Receita, margem, divida, caixa e governanca precisam ser lidos juntos.",
+      "Preco baixo pode esconder empresa piorando. O importante e comparar preco com qualidade, crescimento, risco e capacidade de gerar caixa.",
+    ],
+    pdfUrl: "/course/modulo-4-acoes.pdf",
+    workbook: ["Descrever modelo de negocio", "Preencher receita, lucro, divida e margem", "Listar tres riscos da empresa"],
+    quizAnswer: "Porque uma acao pode estar barata no preco e cara em relacao ao lucro, risco ou qualidade do negocio.",
+  },
+  "FIIs e ETFs": {
+    lessonContent: [
+      "FIIs podem gerar renda, mas os rendimentos variam e as cotas oscilam. Vacancia, juros e qualidade dos imoveis afetam resultado.",
+      "Dividend yield alto sem contexto pode ser armadilha. Pode refletir risco maior, queda da cota ou rendimento nao recorrente.",
+      "ETFs simplificam diversificacao, mas ainda carregam risco do indice, taxa, moeda e concentracao dos ativos que compoem a cesta.",
+    ],
+    pdfUrl: "/course/modulo-5-fiis-etfs.pdf",
+    workbook: ["Comparar FII de papel e tijolo", "Ver taxa e indice de um ETF", "Montar carteira ficticia diversificada"],
+    quizAnswer: "O investidor pode comprar risco excessivo ou rendimento temporario achando que e renda garantida.",
+  },
+  "Cambio e Forex": {
+    lessonContent: [
+      "Pares de moedas mostram uma moeda contra outra. EUR/USD sobe quando o euro se fortalece contra o dolar ou o dolar enfraquece.",
+      "Spread, lote e alavancagem definem custo e risco. Uma posicao pequena pode virar grande demais quando ha alavancagem.",
+      "Noticias aumentam volatilidade e slippage. Antes de operar, o aluno deve saber horario, evento, perda maxima e ponto de invalidacao.",
+    ],
+    pdfUrl: "/course/modulo-6-cambio-forex.pdf",
+    workbook: ["Definir par estudado e motivo", "Anotar spread, horario e evento macro", "Escrever tese, invalidacao e perda maxima"],
+    quizAnswer: "Porque a alavancagem multiplica ganhos e perdas, fazendo pequenas variacoes consumirem grande parte da conta.",
+  },
+  "Noticias economicas": {
+    lessonContent: [
+      "Mercado reage a diferenca entre dado divulgado e expectativa. Uma noticia boa ja esperada pode mexer pouco.",
+      "Toda manchete precisa virar pergunta: qual dado mudou, quem ganha, quem perde e qual ativo costuma reagir primeiro.",
+      "Impacto nao e recomendacao. A aula ensina a montar contexto e riscos, nao ordem de compra ou venda.",
+    ],
+    pdfUrl: "/course/modulo-7-noticias-economicas.pdf",
+    workbook: ["Escolher uma manchete", "Anotar consenso, dado divulgado e surpresa", "Escrever impacto possivel e risco que invalida"],
+    quizAnswer: "Porque o preco pode ja ter antecipado a noticia, ou outro fator maior pode dominar o mercado.",
+  },
+  "Anti-golpe": {
+    lessonContent: [
+      "Promessa de ganho garantido, urgencia e print de lucro sao sinais de alerta. Investimento serio fala de risco antes de retorno.",
+      "Verifique registro, CNPJ, contrato, taxa, conflito de interesse e como a pessoa ganha dinheiro com a oferta.",
+      "Nunca envie dinheiro por pressa. O aluno deve pausar, comparar fontes e pedir documentos antes de qualquer decisao.",
+    ],
+    pdfUrl: "/course/modulo-8-anti-golpe.pdf",
+    workbook: ["Marcar promessas de retorno garantido", "Checar transparencia e dados da empresa", "Listar perguntas antes de comprar qualquer oferta"],
+    quizAnswer: "Qualquer promessa de lucro garantido ou sem risco deve acender alerta imediato.",
+  },
+};
+
 const STUDY_TRACKS = [
   {
     level: "Iniciante",
@@ -2008,6 +2091,7 @@ function CoursePage({ user, onCheckout, onBack }: { user: UserAccount | null; on
       <section className="grid lg:grid-cols-[1fr_340px] gap-4">
         <div className="space-y-3">
           {COURSE_MODULES.map((module, index) => {
+            const details = COURSE_DETAILS[module.title];
             return (
               <article key={module.title} className="border border-border bg-card p-5">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
@@ -2019,25 +2103,41 @@ function CoursePage({ user, onCheckout, onBack }: { user: UserAccount | null; on
                   <span className="mono text-[10px] tracking-widest uppercase text-emerald-400 border border-emerald-400/30 px-2 py-1 self-start">Aberto</span>
                 </div>
                 <div className="grid md:grid-cols-3 gap-3 mt-4">
-                  {module.lessons.map((lesson) => (
+                  {module.lessons.map((lesson, lessonIndex) => (
                     <div key={lesson} className="border border-border bg-background/40 p-3">
                       <p className="mono text-[9px] tracking-widest uppercase text-muted-foreground">Aula</p>
-                      <p className="text-xs text-muted-foreground mt-1">{lesson}</p>
+                      <p className="text-sm text-foreground mt-1">{lesson}</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed mt-3">{details.lessonContent[lessonIndex]}</p>
                     </div>
                   ))}
                 </div>
                 <div className="grid md:grid-cols-3 gap-3 mt-3">
                   <div className="border border-border bg-background/40 p-3">
                     <p className="mono text-[9px] tracking-widest uppercase text-primary">PDF</p>
-                    <p className="text-xs text-muted-foreground mt-1">{module.pdf}</p>
+                    <p className="text-sm text-foreground mt-1">{module.pdf}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed mt-2">Material de apoio com checklist, campos para preencher e resumo pratico do modulo.</p>
+                    <a href={details.pdfUrl} download className="mt-3 inline-flex items-center gap-2 border border-primary/40 text-primary px-3 py-2 mono text-[10px] hover:bg-primary/10">
+                      Baixar PDF
+                      <ArrowUpRight size={13} />
+                    </a>
                   </div>
                   <div className="border border-border bg-background/40 p-3">
                     <p className="mono text-[9px] tracking-widest uppercase text-primary">Exercicio</p>
                     <p className="text-xs text-muted-foreground mt-1">{module.exercise}</p>
+                    <ul className="mt-3 space-y-2">
+                      {details.workbook.map((item) => (
+                        <li key={item} className="text-xs text-muted-foreground leading-relaxed flex gap-2">
+                          <CheckCircle2 size={12} className="text-primary shrink-0 mt-0.5" />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                   <div className="border border-border bg-background/40 p-3">
                     <p className="mono text-[9px] tracking-widest uppercase text-primary">Quiz</p>
                     <p className="text-xs text-muted-foreground mt-1">{module.quiz}</p>
+                    <p className="mono text-[9px] tracking-widest uppercase text-emerald-500 mt-3">Resposta esperada</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed mt-1">{details.quizAnswer}</p>
                   </div>
                 </div>
               </article>
