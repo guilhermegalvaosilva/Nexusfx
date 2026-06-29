@@ -86,6 +86,34 @@ type Offer = {
   cta: string;
 };
 
+const PURCHASED_CONTENT: Record<OfferId, string[]> = {
+  pro: [
+    "Hub do assinante com Morning Brief diario e resumo semanal",
+    "Alertas, filtros e watchlist educativa para organizar estudos",
+    "Simulador de carteira ficticia, quizzes e trilhas Pro",
+    "IA para resumir noticias e transformar fatos em pontos de estudo",
+  ],
+  premium: [
+    "Tudo do Pro liberado na mesma conta",
+    "Terminal Premium com Forex, cripto, indices, commodities e acoes",
+    "Indicadores tecnicos, macro, fluxo, risco e cenarios educativos",
+    "IA operacional para tese, risco, invalidacao e revisao pos-estudo",
+    "Comunidade, aulas, relatorios e materiais PDF premium",
+  ],
+  newsletter: [
+    "Morning Brief diario dentro da plataforma",
+    "Resumo semanal com temas que mais mexeram no mercado",
+    "Agenda economica, impactos explicados e termos traduzidos",
+    "Roteiro do que estudar sem promessa de sinal ou lucro",
+  ],
+  course: [
+    "8 modulos do curso Investimentos do Zero",
+    "24 aulas com roteiro de estudo, exemplos e quizzes",
+    "8 PDFs e exercicios baixaveis para praticar",
+    "Certificado, comunidade do curso e futuras aulas extras",
+  ],
+};
+
 type AppView = "home" | "login" | "checkout" | "premium" | "plans" | "studies" | "newsletter" | "course" | "ai" | "terminal";
 type ThemeMode = "dark" | "light";
 
@@ -1190,6 +1218,17 @@ function CheckoutPage({
                 </div>
               ))}
             </div>
+            <div className="mt-6 border border-primary/20 bg-primary/5 p-4">
+              <p className="mono text-[10px] tracking-widest uppercase text-primary">O que voce recebe apos comprar</p>
+              <div className="grid sm:grid-cols-2 gap-2 mt-3">
+                {PURCHASED_CONTENT[offer.id].map((item) => (
+                  <p key={item} className="text-xs text-muted-foreground leading-relaxed flex gap-2">
+                    <CheckCircle2 size={13} className="text-primary shrink-0 mt-0.5" />
+                    {item}
+                  </p>
+                ))}
+              </div>
+            </div>
           </section>
           <aside className="bg-card border border-border p-6 self-start">
             <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
@@ -1229,6 +1268,17 @@ function CheckoutPage({
                 {item}
               </div>
             ))}
+          </div>
+          <div className="mt-6 border border-primary/20 bg-primary/5 p-4">
+            <p className="mono text-[10px] tracking-widest uppercase text-primary">O que voce recebe apos comprar</p>
+            <div className="grid sm:grid-cols-2 gap-2 mt-3">
+              {PURCHASED_CONTENT[offer.id].map((item) => (
+                <p key={item} className="text-xs text-muted-foreground leading-relaxed flex gap-2">
+                  <CheckCircle2 size={13} className="text-primary shrink-0 mt-0.5" />
+                  {item}
+                </p>
+              ))}
+            </div>
           </div>
           <div className="mt-6 border border-amber-400/20 bg-amber-400/5 p-4">
             <p className="mono text-[10px] tracking-widest uppercase text-amber-400">Ambiente demo</p>
@@ -1625,7 +1675,7 @@ function PlansPage({ user, onCheckout, onBack }: { user: UserAccount | null; onC
           </p>
           <p className="text-sm text-muted-foreground mt-3">{OFFERS.pro.description}</p>
           <div className="mt-5 space-y-2">
-            {["Morning Brief diario", "Alertas e filtros", "Watchlist educativa", "Simulador e quizzes", "IA resumindo noticias"].map((feature) => (
+            {PURCHASED_CONTENT.pro.map((feature) => (
               <p key={feature} className="text-xs text-muted-foreground flex gap-2">
                 <CheckCircle2 size={13} className="text-sky-400 shrink-0" />
                 {feature}
@@ -1651,14 +1701,7 @@ function PlansPage({ user, onCheckout, onBack }: { user: UserAccount | null; onC
           </p>
           <p className="text-sm text-muted-foreground mt-3">{OFFERS.premium.description}</p>
           <div className="mt-5 space-y-2">
-            {[
-              "Tudo do Pro",
-              "Terminal Forex, cripto, indices, commodities e acoes",
-              "Todos os grupos de indicadores",
-              "Cenarios educativos de entrada e no-trade",
-              "IA avancada para tese, risco e revisao",
-              "Comunidade, relatorios e PDFs",
-            ].map((feature) => (
+            {PURCHASED_CONTENT.premium.map((feature) => (
               <p key={feature} className="text-xs text-muted-foreground flex gap-2">
                 <CheckCircle2 size={13} className="text-emerald-400 shrink-0" />
                 {feature}
@@ -1707,6 +1750,14 @@ function PlansPage({ user, onCheckout, onBack }: { user: UserAccount | null; onC
                 <span className="text-xs text-muted-foreground"> {offer.recurrence}</span>
               </p>
               <p className="text-sm text-muted-foreground mt-3">{offer.description}</p>
+              <div className="mt-5 space-y-2">
+                {PURCHASED_CONTENT[offer.id].map((item) => (
+                  <p key={item} className="text-xs text-muted-foreground flex gap-2">
+                    <CheckCircle2 size={13} className="text-primary shrink-0" />
+                    {item}
+                  </p>
+                ))}
+              </div>
               <button disabled={active} onClick={() => onCheckout(offer.id)} className="mt-5 bg-primary text-primary-foreground px-4 py-2 mono text-sm hover:bg-primary/90 disabled:opacity-50">
                 {active ? "Liberado" : offer.cta}
               </button>
@@ -1942,6 +1993,14 @@ function CoursePage({ user, onCheckout, onBack }: { user: UserAccount | null; on
                 <p className="mono text-2xl text-primary">{value}</p>
                 <p className="mono text-[10px] text-muted-foreground uppercase tracking-widest">{label}</p>
               </div>
+            ))}
+          </div>
+          <div className="mt-5 space-y-2">
+            {PURCHASED_CONTENT.course.map((item) => (
+              <p key={item} className="text-xs text-muted-foreground leading-relaxed flex gap-2">
+                <CheckCircle2 size={13} className="text-primary shrink-0 mt-0.5" />
+                {item}
+              </p>
             ))}
           </div>
         </aside>
@@ -2365,13 +2424,7 @@ export default function App() {
   const [view, setView] = useState<AppView>("home");
   const [checkoutOfferId, setCheckoutOfferId] = useState<OfferId>(DEFAULT_OFFER_ID);
   const [navOpen, setNavOpen] = useState(false);
-  const [theme, setTheme] = useState<ThemeMode>(() => {
-    try {
-      return localStorage.getItem(THEME_STORAGE_KEY) === "light" ? "light" : "dark";
-    } catch {
-      return "dark";
-    }
-  });
+  const [theme, setTheme] = useState<ThemeMode>("light");
   const [time, setTime] = useState(new Date());
   const [selectedPair, setSelectedPair] = useState(FOREX_PAIRS[0]);
   const [liveNews, setLiveNews] = useState<NewsArticle[]>([]);
