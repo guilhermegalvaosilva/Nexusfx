@@ -9,6 +9,13 @@
       <meta name="description" content="Stay informed with a news landing page featuring global economy insights, geopolitics, AI developments, and forex assistance for traders." />
       <meta name="robots" content="noindex, nofollow" />
       <style>html, body { height: 100%; margin: 0; } #root { height: 100%; }</style>
+      <script>
+        if (location.hostname.endsWith("github.io")) {
+          const base = "/Nexusfx";
+          document.write(`<link rel="stylesheet" crossorigin href="${base}/assets/index.css">`);
+          document.write(`<script type="module" crossorigin src="${base}/assets/index.js"><\/script>`);
+        }
+      </script>
       
     </head>
 

@@ -18,6 +18,15 @@ function figmaAssetResolver() {
 
 export default defineConfig({
   base: process.env.GITHUB_PAGES ? '/Nexusfx/' : './',
+  build: {
+    rollupOptions: {
+      output: {
+        entryFileNames: 'assets/index.js',
+        chunkFileNames: 'assets/[name].js',
+        assetFileNames: 'assets/[name][extname]',
+      },
+    },
+  },
   plugins: [
     figmaAssetResolver(),
     // The React and Tailwind plugins are both required for Make, even if
